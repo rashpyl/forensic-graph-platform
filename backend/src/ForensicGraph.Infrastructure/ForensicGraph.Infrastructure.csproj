@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\ForensicGraph.Application\ForensicGraph.Application.csproj" />
+    <ProjectReference Include="..\ForensicGraph.Domain\ForensicGraph.Domain.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <RootNamespace>ForensicGraph.Infrastructure</RootNamespace>
+  </PropertyGroup>
+
+</Project>
