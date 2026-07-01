@@ -18,8 +18,11 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddForensicGraphValidation();
 builder.Services.AddForensicGraphSwagger();
 builder.Services.AddForensicGraphCors();
+builder.Services.AddForensicGraphPersistence(builder.Configuration);
 
 var app = builder.Build();
+
+await app.ApplyForensicGraphMigrationsAsync();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
