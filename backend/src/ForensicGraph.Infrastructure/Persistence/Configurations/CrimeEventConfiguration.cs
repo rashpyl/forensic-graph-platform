@@ -25,6 +25,10 @@ internal sealed class CrimeEventConfiguration : IEntityTypeConfiguration<CrimeEv
             .HasColumnName("description")
             .HasColumnType("text");
 
+        builder.Property(e => e.Address)
+            .HasColumnName("address")
+            .HasColumnType("text");
+
         builder.Property(e => e.OccurredAt)
             .HasColumnName("occurred_at")
             .HasColumnType("timestamptz")
@@ -58,5 +62,15 @@ internal sealed class CrimeEventConfiguration : IEntityTypeConfiguration<CrimeEv
 
         builder.HasIndex(e => e.Severity)
             .HasDatabaseName("ix_crime_events_severity");
+
+        builder.HasMany(e => e.Persons)
+            .WithOne()
+            .HasForeignKey(ep => ep.CrimeEventId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(e => e.OutgoingLinks)
+            .WithOne()
+            .HasForeignKey(l => l.FromEventId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

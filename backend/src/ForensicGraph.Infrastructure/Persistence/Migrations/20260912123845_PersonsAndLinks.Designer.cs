@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using ForensicGraph.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ForensicGraph.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ForensicGraphDbContext))]
-    partial class ForensicGraphDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260912123845_PersonsAndLinks")]
+    partial class PersonsAndLinks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

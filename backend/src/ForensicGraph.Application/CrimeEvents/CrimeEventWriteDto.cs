@@ -9,6 +9,7 @@ public sealed record CrimeEventWriteDto
 {
     public string Title { get; init; } = string.Empty;
     public string? Description { get; init; }
+    public string? Address { get; init; }
     public DateTime OccurredAt { get; init; }
     public int Severity { get; init; }
     public double? Latitude { get; init; }

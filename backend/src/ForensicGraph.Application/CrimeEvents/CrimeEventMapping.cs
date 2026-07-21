@@ -16,6 +16,7 @@ public static class CrimeEventMapping
             Id = entity.Id,
             Title = entity.Title,
             Description = entity.Description,
+            Address = entity.Address,
             OccurredAt = entity.OccurredAt,
             Severity = entity.Severity,
             Latitude = entity.Latitude,
@@ -30,6 +31,7 @@ public static class CrimeEventMapping
         entity.Update(
             title: dto.Title,
             description: dto.Description,
+            address: dto.Address,
             occurredAt: dto.OccurredAt,
             severity: dto.Severity,
             latitude: dto.Latitude,
