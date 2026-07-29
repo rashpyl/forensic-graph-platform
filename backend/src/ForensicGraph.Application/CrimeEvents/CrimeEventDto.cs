@@ -13,6 +13,8 @@ public sealed record CrimeEventDto
     public int Severity { get; init; }
     public double? Latitude { get; init; }
     public double? Longitude { get; init; }
+    public IReadOnlyList<EventPersonDto> Persons { get; init; } = Array.Empty<EventPersonDto>();
+    public IReadOnlyList<EventLinkDto> Links { get; init; } = Array.Empty<EventLinkDto>();
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
 }

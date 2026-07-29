@@ -1,21 +1,30 @@
 using ForensicGraph.Application.Common;
+using ForensicGraph.Application.Persons;
 using ForensicGraph.Domain.CrimeEvents;
+using ForensicGraph.Domain.Persons;
 
 namespace ForensicGraph.Application.CrimeEvents;
 
 /// <summary>
-/// Orchestrates crime-event use cases: list, get, create, update, delete.
-/// Depends only on <see cref="ICrimeEventRepository"/> for persistence and
-/// <see cref="TimeProvider"/> for server-managed timestamps — keeping the layer database-agnostic.
+/// Orchestrates crime-event use cases: list, get, create, update, delete,
+/// assign / unassign a <see cref="Person"/>, and link / unlink to another
+/// <see cref="CrimeEvent"/>. Depends only on
+/// <see cref="ICrimeEventRepository"/> / <see cref="IPersonRepository"/> for
+/// persistence and <see cref="TimeProvider"/> for server-managed timestamps.
 /// </summary>
 public sealed class CrimeEventService
 {
     private readonly ICrimeEventRepository _repository;
+    private readonly IPersonRepository _personRepository;
     private readonly TimeProvider _timeProvider;
 
-    public CrimeEventService(ICrimeEventRepository repository, TimeProvider timeProvider)
+    public CrimeEventService(
+        ICrimeEventRepository repository,
+        IPersonRepository personRepository,
+        TimeProvider timeProvider)
     {
         _repository = repository;
+        _personRepository = personRepository;
         _timeProvider = timeProvider;
     }
 
@@ -31,9 +40,22 @@ public sealed class CrimeEventService
 
     public async Task<CrimeEventDto> GetAsync(Guid id, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(id, cancellationToken)
+        var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken)
             ?? throw new NotFoundException(nameof(CrimeEvent), id);
-        return entity.ToDto();
+
+        var personIds = entity.Persons.Select(ep => ep.PersonId).Distinct().ToArray();
+        var targetIds = entity.OutgoingLinks.Select(l => l.ToEventId).Distinct().ToArray();
+
+        var persons = personIds.Length == 0
+            ? Array.Empty<Person>()
+            : await _personRepository.GetManyAsync(personIds, cancellationToken);
+        var personLookup = persons.ToDictionary(p => p.Id);
+
+        var titleLookup = targetIds.Length == 0
+            ? new Dictionary<Guid, string>()
+            : (Dictionary<Guid, string>)await _repository.GetTitlesAsync(targetIds, cancellationToken);
+
+        return entity.ToDetailDto(personLookup, titleLookup);
     }
 
     public async Task<CrimeEventDto> CreateAsync(
@@ -79,6 +101,107 @@ public sealed class CrimeEventService
             ?? throw new NotFoundException(nameof(CrimeEvent), id);
 
         await _repository.RemoveAsync(entity, cancellationToken);
+        await _repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AssignPersonAsync(
+        Guid crimeEventId,
+        Guid personId,
+        EventRole role,
+        CancellationToken cancellationToken)
+    {
+        var eventEntity = await _repository.GetByIdWithDetailsAsync(crimeEventId, cancellationToken)
+            ?? throw new NotFoundException(nameof(CrimeEvent), crimeEventId);
+
+        _ = await _personRepository.GetByIdAsync(personId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Person), personId);
+
+        var alreadyAssigned = eventEntity.Persons.Any(ep =>
+            ep.PersonId == personId && ep.Role == role);
+        if (alreadyAssigned)
+        {
+            throw new ConflictException(
+                $"Person '{personId}' is already assigned to event '{crimeEventId}' with role '{role}'.");
+        }
+
+        var nowUtc = _timeProvider.GetUtcNow().UtcDateTime;
+        var assignment = EventPerson.Create(crimeEventId, personId, role, nowUtc);
+
+        await _repository.AddPersonAssignmentAsync(assignment, cancellationToken);
+        await _repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UnassignPersonAsync(
+        Guid crimeEventId,
+        Guid personId,
+        EventRole role,
+        CancellationToken cancellationToken)
+    {
+        var eventEntity = await _repository.GetByIdWithDetailsAsync(crimeEventId, cancellationToken)
+            ?? throw new NotFoundException(nameof(CrimeEvent), crimeEventId);
+
+        var exists = eventEntity.Persons.Any(ep =>
+            ep.PersonId == personId && ep.Role == role);
+        if (!exists)
+        {
+            throw new NotFoundException(
+                $"Person '{personId}' with role '{role}' is not assigned to event '{crimeEventId}'.");
+        }
+
+        await _repository.RemovePersonAssignmentAsync(crimeEventId, personId, role, cancellationToken);
+        await _repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task LinkEventAsync(
+        Guid fromEventId,
+        Guid toEventId,
+        string? note,
+        CancellationToken cancellationToken)
+    {
+        if (fromEventId == toEventId)
+        {
+            throw new ConflictException("An event cannot be linked to itself.");
+        }
+
+        var fromEntity = await _repository.GetByIdWithDetailsAsync(fromEventId, cancellationToken)
+            ?? throw new NotFoundException(nameof(CrimeEvent), fromEventId);
+
+        var toExists = await _repository.ExistsAsync(toEventId, cancellationToken);
+        if (!toExists)
+        {
+            throw new NotFoundException(nameof(CrimeEvent), toEventId);
+        }
+
+        var alreadyLinked = fromEntity.OutgoingLinks.Any(l => l.ToEventId == toEventId);
+        if (alreadyLinked)
+        {
+            throw new ConflictException(
+                $"Event '{fromEventId}' is already linked to '{toEventId}'.");
+        }
+
+        var nowUtc = _timeProvider.GetUtcNow().UtcDateTime;
+        var link = EventLink.Create(fromEventId, toEventId, note, nowUtc);
+
+        await _repository.AddLinkAsync(link, cancellationToken);
+        await _repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UnlinkEventAsync(
+        Guid fromEventId,
+        Guid toEventId,
+        CancellationToken cancellationToken)
+    {
+        var fromEntity = await _repository.GetByIdWithDetailsAsync(fromEventId, cancellationToken)
+            ?? throw new NotFoundException(nameof(CrimeEvent), fromEventId);
+
+        var exists = fromEntity.OutgoingLinks.Any(l => l.ToEventId == toEventId);
+        if (!exists)
+        {
+            throw new NotFoundException(
+                $"No link from event '{fromEventId}' to '{toEventId}' was found.");
+        }
+
+        await _repository.RemoveLinkAsync(fromEventId, toEventId, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
     }
 }
