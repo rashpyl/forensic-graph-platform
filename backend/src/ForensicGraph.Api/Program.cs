@@ -1,4 +1,5 @@
 using ForensicGraph.Api.Extensions;
+using ForensicGraph.Infrastructure;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,7 +21,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddForensicGraphValidation();
 builder.Services.AddForensicGraphSwagger();
 builder.Services.AddForensicGraphCors();
-builder.Services.AddForensicGraphPersistence(builder.Configuration);
+builder.Services.AddForensicGraphInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
