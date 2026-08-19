@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet.markercluster'
@@ -8,19 +8,30 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import { storeToRefs } from 'pinia'
 
 import { useEventsStore } from '@/stores/events'
+import { usePersonsStore } from '@/stores/persons'
+import { useUiStore } from '@/stores/ui'
 import { colorForSeverity, labelForSeverity } from '@/composables/useSeverity'
 import type { CrimeEventDto } from '@/types/api'
+import NewEventDialog from '@/components/NewEventDialog.vue'
+import EventDetailPanel from '@/components/EventDetailPanel.vue'
 
 /**
  * Full-viewport Leaflet map. Displays every geolocated crime event as a
  * severity-coloured circle marker inside a marker-cluster group so the
- * viewport stays legible even in dense areas. Hover shows a compact tooltip
- * (title + address); click will eventually open a side panel — for the MVP
- * we log the id and rely on Leaflet's default popup.
+ * viewport stays legible even in dense areas. Hover shows a compact
+ * tooltip (title + address + severity); click loads the event detail into
+ * the side panel via <c>eventsStore.select()</c>.
+ *
+ * When the user hits "New Event" in the navbar the UI store flips into
+ * <c>isPickingLocation</c> mode: the map swaps its cursor + click handler
+ * to capture a lat/lng pair and hands it off to <see cref="NewEventDialog"/>.
  */
 
 const eventsStore = useEventsStore()
-const { geolocatedEvents, isLoading, error } = storeToRefs(eventsStore)
+const personsStore = usePersonsStore()
+const uiStore = useUiStore()
+const { geolocatedEvents, isLoading, error, selected } = storeToRefs(eventsStore)
+const { isPickingLocation } = storeToRefs(uiStore)
 
 const mapContainer = ref<HTMLDivElement | null>(null)
 let map: L.Map | null = null
@@ -28,6 +39,11 @@ let clusterGroup: L.MarkerClusterGroup | null = null
 
 const DEFAULT_CENTER: L.LatLngExpression = [50.0755, 14.4378] // Prague
 const DEFAULT_ZOOM = 5
+
+const canvasClass = computed(() => ({
+  'map-canvas': true,
+  'picking-mode': isPickingLocation.value,
+}))
 
 function buildMarker(event: CrimeEventDto & { latitude: number; longitude: number }): L.CircleMarker {
   const marker = L.circleMarker([event.latitude, event.longitude], {
@@ -75,6 +91,17 @@ function refreshMarkers() {
   }
 }
 
+function handleMapClick(e: L.LeafletMouseEvent) {
+  if (!isPickingLocation.value) return
+  uiStore.locationPicked(e.latlng.lat, e.latlng.lng)
+}
+
+function handleEscape(e: KeyboardEvent) {
+  if (e.key === 'Escape' && isPickingLocation.value) {
+    uiStore.cancelPicking()
+  }
+}
+
 onMounted(async () => {
   if (!mapContainer.value) return
 
@@ -95,8 +122,14 @@ onMounted(async () => {
   })
   map.addLayer(clusterGroup)
 
+  map.on('click', handleMapClick)
+  window.addEventListener('keydown', handleEscape)
+
   try {
-    await eventsStore.fetchAll()
+    await Promise.all([
+      eventsStore.fetchAll(),
+      personsStore.fetchAll(),
+    ])
   } catch {
     // error state is surfaced via the store; the map stays usable.
   }
@@ -107,7 +140,15 @@ watch(geolocatedEvents, () => {
   refreshMarkers()
 })
 
+// When a newly-created event is picked in the store, gently pan/zoom to it.
+watch(selected, (event) => {
+  if (event && typeof event.latitude === 'number' && typeof event.longitude === 'number' && map) {
+    map.flyTo([event.latitude, event.longitude], Math.max(map.getZoom(), 11), { duration: 0.6 })
+  }
+})
+
 onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleEscape)
   map?.remove()
   map = null
   clusterGroup = null
@@ -116,9 +157,13 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="map-view">
-    <div ref="mapContainer" class="map-canvas" />
+    <div ref="mapContainer" :class="canvasClass" />
 
-    <div v-if="isLoading" class="map-status loading">Loading events…</div>
+    <div v-if="isPickingLocation" class="map-status picking">
+      🎯 Click on the map to place the new event —
+      <button class="cancel-link" @click="uiStore.cancelPicking()">cancel</button>
+    </div>
+    <div v-else-if="isLoading" class="map-status loading">Loading events…</div>
     <div v-else-if="error" class="map-status error">
       Could not load events: {{ error }}
     </div>
@@ -130,6 +175,9 @@ onBeforeUnmount(() => {
         <span class="lbl">{{ level }} — {{ labelForSeverity(level) }}</span>
       </div>
     </div>
+
+    <EventDetailPanel />
+    <NewEventDialog />
   </div>
 </template>
 
@@ -139,12 +187,22 @@ onBeforeUnmount(() => {
   flex: 1;
   height: 100%;
   width: 100%;
+  display: flex;
 }
 
 .map-canvas {
   position: absolute;
   inset: 0;
   z-index: 0;
+}
+
+.map-canvas.picking-mode {
+  cursor: crosshair;
+}
+
+.map-canvas.picking-mode :deep(.leaflet-grab),
+.map-canvas.picking-mode :deep(.leaflet-container) {
+  cursor: crosshair !important;
 }
 
 .map-status {
@@ -161,9 +219,26 @@ onBeforeUnmount(() => {
   border: 1px solid #2d3148;
 }
 
+.map-status.picking {
+  background: rgba(99, 102, 241, 0.85);
+  border-color: #a5b4fc;
+  color: #f1f5f9;
+}
+
 .map-status.error {
   background: rgba(153, 27, 27, 0.85);
   border-color: #ef4444;
+}
+
+.cancel-link {
+  background: transparent;
+  border: none;
+  color: white;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  margin-left: 6px;
 }
 
 .severity-legend {

@@ -1,7 +1,12 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { eventsApi } from '@/services/eventsApi'
-import type { CrimeEventDto, CrimeEventListQuery, CrimeEventWriteDto } from '@/types/api'
+import type {
+  CrimeEventDto,
+  CrimeEventListQuery,
+  CrimeEventWriteDto,
+  EventRole,
+} from '@/types/api'
 
 /**
  * Pinia store for the crime-event feature. Owns the map's marker list, the
@@ -42,6 +47,11 @@ export const useEventsStore = defineStore('events', () => {
     selected.value = await eventsApi.get(id)
   }
 
+  async function refreshSelected(): Promise<void> {
+    if (!selected.value) return
+    selected.value = await eventsApi.get(selected.value.id)
+  }
+
   function clearSelection(): void {
     selected.value = null
   }
@@ -60,6 +70,46 @@ export const useEventsStore = defineStore('events', () => {
     }
   }
 
+  async function assignPerson(
+    eventId: string,
+    personId: string,
+    role: EventRole,
+  ): Promise<void> {
+    await eventsApi.assignPerson(eventId, personId, role)
+    if (selected.value?.id === eventId) {
+      await refreshSelected()
+    }
+  }
+
+  async function unassignPerson(
+    eventId: string,
+    personId: string,
+    role: EventRole,
+  ): Promise<void> {
+    await eventsApi.unassignPerson(eventId, personId, role)
+    if (selected.value?.id === eventId) {
+      await refreshSelected()
+    }
+  }
+
+  async function linkEvent(
+    fromId: string,
+    toId: string,
+    note?: string | null,
+  ): Promise<void> {
+    await eventsApi.link(fromId, toId, note ?? null)
+    if (selected.value?.id === fromId) {
+      await refreshSelected()
+    }
+  }
+
+  async function unlinkEvent(fromId: string, toId: string): Promise<void> {
+    await eventsApi.unlink(fromId, toId)
+    if (selected.value?.id === fromId) {
+      await refreshSelected()
+    }
+  }
+
   return {
     events,
     selected,
@@ -68,8 +118,13 @@ export const useEventsStore = defineStore('events', () => {
     geolocatedEvents,
     fetchAll,
     select,
+    refreshSelected,
     clearSelection,
     create,
     remove,
+    assignPerson,
+    unassignPerson,
+    linkEvent,
+    unlinkEvent,
   }
 })

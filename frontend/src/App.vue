@@ -1,9 +1,19 @@
+<script setup lang="ts">
+import { useUiStore } from '@/stores/ui'
+
+const uiStore = useUiStore()
+
+function startNewEvent() {
+  uiStore.startPickingLocation()
+}
+</script>
+
 <template>
   <div id="app-layout">
     <header class="topbar">
       <span class="topbar-title">🔍 Forensic Graph Platform</span>
       <nav class="topbar-actions">
-        <button class="nav-btn" disabled title="Coming in the next chunk">
+        <button class="nav-btn" @click="startNewEvent">
           <span class="nav-icon">＋</span> New Event
         </button>
         <button class="nav-btn" disabled title="Coming in the next chunk">
