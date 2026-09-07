@@ -143,6 +143,16 @@ public sealed class CrimeEventRepository : ICrimeEventRepository
         await _db.EventLinks.AddAsync(link, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<EventLink>> GetIncomingLinksAsync(
+        Guid toEventId,
+        CancellationToken cancellationToken)
+    {
+        return await _db.EventLinks
+            .AsNoTracking()
+            .Where(l => l.ToEventId == toEventId)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task RemoveLinkAsync(
         Guid fromEventId,
         Guid toEventId,

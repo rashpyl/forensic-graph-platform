@@ -32,38 +32,53 @@ public static class CrimeEventMapping
     }
 
     /// <summary>
-    /// Projects the aggregate to a DTO with persons and outgoing links populated.
-    /// Callers must pass already-loaded lookups; the mapping itself is pure.
+    /// Projects the aggregate to a DTO with persons and every related event
+    /// (both outgoing and incoming links) populated. Callers must pass
+    /// already-loaded lookups; the mapping itself is pure.
     /// </summary>
     public static CrimeEventDto ToDetailDto(
         this CrimeEvent entity,
         IReadOnlyDictionary<Guid, Person> personLookup,
-        IReadOnlyDictionary<Guid, string> targetTitleLookup)
+        IReadOnlyList<EventLink> incomingLinks,
+        IReadOnlyDictionary<Guid, string> relatedTitleLookup)
     {
         var persons = entity.Persons
-            .Select(ep => new EventPersonDto
+            .Select(ep =>
             {
-                PersonId = ep.PersonId,
-                FirstName = personLookup.TryGetValue(ep.PersonId, out var person)
-                    ? person.FirstName
-                    : string.Empty,
-                LastName = personLookup.TryGetValue(ep.PersonId, out var person2)
-                    ? person2.LastName
-                    : string.Empty,
-                Role = ep.Role,
+                var person = personLookup.GetValueOrDefault(ep.PersonId);
+                return new EventPersonDto
+                {
+                    PersonId = ep.PersonId,
+                    FirstName = person?.FirstName ?? string.Empty,
+                    LastName = person?.LastName ?? string.Empty,
+                    Role = ep.Role,
+                };
             })
             .ToArray();
 
-        var links = entity.OutgoingLinks
-            .Select(l => new EventLinkDto
-            {
-                ToEventId = l.ToEventId,
-                ToEventTitle = targetTitleLookup.TryGetValue(l.ToEventId, out var title)
-                    ? title
-                    : string.Empty,
-                Note = l.Note,
-                CreatedAt = l.CreatedAt,
-            })
+        var outgoing = entity.OutgoingLinks.Select(l => new EventLinkDto
+        {
+            FromEventId = l.FromEventId,
+            ToEventId = l.ToEventId,
+            OtherEventId = l.ToEventId,
+            OtherEventTitle = relatedTitleLookup.GetValueOrDefault(l.ToEventId, string.Empty),
+            Note = l.Note,
+            CreatedAt = l.CreatedAt,
+        });
+
+        var incoming = incomingLinks.Select(l => new EventLinkDto
+        {
+            FromEventId = l.FromEventId,
+            ToEventId = l.ToEventId,
+            OtherEventId = l.FromEventId,
+            OtherEventTitle = relatedTitleLookup.GetValueOrDefault(l.FromEventId, string.Empty),
+            Note = l.Note,
+            CreatedAt = l.CreatedAt,
+        });
+
+        var links = outgoing
+            .Concat(incoming)
+            .OrderByDescending(l => l.CreatedAt)
             .ToArray();
 
         return entity.ToDto() with { Persons = persons, Links = links };

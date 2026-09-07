@@ -106,7 +106,7 @@ const linkCandidates = computed(() =>
   events.value.filter(
     (e) =>
       e.id !== selected.value?.id &&
-      !selected.value?.links.some((l) => l.toEventId === e.id),
+      !selected.value?.links.some((l) => l.otherEventId === e.id),
   ),
 )
 
@@ -132,10 +132,10 @@ async function linkEvent() {
   }
 }
 
-async function unlink(toEventId: string) {
+async function unlink(fromEventId: string, toEventId: string) {
   if (!selected.value) return
   try {
-    await eventsStore.unlinkEvent(selected.value.id, toEventId)
+    await eventsStore.unlinkEvent(fromEventId, toEventId)
   } catch (err) {
     linkError.value = formatApiError(err)
   }
@@ -266,12 +266,20 @@ function close() {
       <section class="panel-section">
         <h3 class="section-title">Linked events ({{ selected.links.length }})</h3>
         <ul v-if="selected.links.length" class="link-list">
-          <li v-for="l in selected.links" :key="l.toEventId" class="link-row">
+          <li
+            v-for="l in selected.links"
+            :key="`${l.fromEventId}-${l.toEventId}`"
+            class="link-row"
+          >
             <div class="link-content">
-              <span class="link-title">{{ l.toEventTitle }}</span>
+              <span class="link-title">{{ l.otherEventTitle }}</span>
               <span v-if="l.note" class="link-note">{{ l.note }}</span>
             </div>
-            <button class="icon-btn small" @click="unlink(l.toEventId)" aria-label="Unlink">✕</button>
+            <button
+              class="icon-btn small"
+              @click="unlink(l.fromEventId, l.toEventId)"
+              aria-label="Unlink"
+            >✕</button>
           </li>
         </ul>
         <p v-else class="empty">No linked events.</p>
