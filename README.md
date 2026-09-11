@@ -1,5 +1,3 @@
-# forensic-graph-platform
-
 # Forensic Graph Platform
 
 Graph-based analytical platform for visualizing and analyzing forensic investigation data —
