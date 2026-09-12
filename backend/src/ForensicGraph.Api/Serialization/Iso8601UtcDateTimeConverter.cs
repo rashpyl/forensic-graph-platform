@@ -21,8 +21,10 @@ internal sealed class Iso8601UtcDateTimeConverter : JsonConverter<DateTime>
         var parsed = DateTime.Parse(
             raw,
             CultureInfo.InvariantCulture,
-            DateTimeStyles.RoundtripKind | DateTimeStyles.AssumeUniversal);
-        return parsed.Kind == DateTimeKind.Utc ? parsed : parsed.ToUniversalTime();
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+        return parsed.Kind == DateTimeKind.Utc
+            ? parsed
+            : DateTime.SpecifyKind(parsed, DateTimeKind.Utc);
     }
 
     public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)

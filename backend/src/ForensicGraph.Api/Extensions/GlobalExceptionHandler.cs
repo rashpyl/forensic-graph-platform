@@ -1,3 +1,4 @@
+using ForensicGraph.Application.Common;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -7,9 +8,14 @@ namespace ForensicGraph.Api.Extensions;
 
 /// <summary>
 /// Global exception handler that maps unhandled exceptions to RFC 7807
-/// ProblemDetails responses. Stack traces are only emitted in Development.
-/// Registered via <see cref="IExceptionHandler"/> — ASP.NET Core invokes it
-/// before the built-in developer exception page.
+/// ProblemDetails responses. Domain-signalled errors map to intent-preserving
+/// HTTP status codes:
+/// <list type="bullet">
+///   <item><see cref="NotFoundException"/> → 404</item>
+///   <item><see cref="ConflictException"/> → 409</item>
+///   <item>anything else → 500</item>
+/// </list>
+/// Stack traces are only emitted for 500s in Development.
 /// </summary>
 internal sealed class GlobalExceptionHandler(
     IProblemDetailsService problemDetailsService,
@@ -21,22 +27,43 @@ internal sealed class GlobalExceptionHandler(
         Exception exception,
         CancellationToken cancellationToken)
     {
-        logger.LogError(exception, "Unhandled exception while processing {Method} {Path}",
-            httpContext.Request.Method, httpContext.Request.Path);
+        var (status, title, type) = Map(exception);
 
-        httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        if (status == StatusCodes.Status500InternalServerError)
+        {
+            logger.LogError(exception, "Unhandled exception while processing {Method} {Path}",
+                httpContext.Request.Method, httpContext.Request.Path);
+        }
+        else
+        {
+            logger.LogInformation(
+                "Handled {Exception} on {Method} {Path} → {Status}",
+                exception.GetType().Name,
+                httpContext.Request.Method,
+                httpContext.Request.Path,
+                status);
+        }
+
+        httpContext.Response.StatusCode = status;
 
         var problem = new ProblemDetails
         {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "An unexpected error occurred.",
-            Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1",
+            Status = status,
+            Title = title,
+            Type = type,
             Instance = httpContext.Request.Path,
         };
 
-        if (environment.IsDevelopment())
+        if (status == StatusCodes.Status500InternalServerError)
         {
-            problem.Detail = exception.ToString();
+            if (environment.IsDevelopment())
+            {
+                problem.Detail = exception.ToString();
+            }
+        }
+        else
+        {
+            problem.Detail = exception.Message;
         }
 
         return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
@@ -46,4 +73,20 @@ internal sealed class GlobalExceptionHandler(
             Exception = exception,
         });
     }
+
+    private static (int Status, string Title, string Type) Map(Exception exception) => exception switch
+    {
+        NotFoundException => (
+            StatusCodes.Status404NotFound,
+            "Resource not found.",
+            "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"),
+        ConflictException => (
+            StatusCodes.Status409Conflict,
+            "Request conflicts with the current state.",
+            "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.8"),
+        _ => (
+            StatusCodes.Status500InternalServerError,
+            "An unexpected error occurred.",
+            "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1"),
+    };
 }

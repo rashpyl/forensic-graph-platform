@@ -1,5 +1,6 @@
 using ForensicGraph.Api.Extensions;
 using ForensicGraph.Infrastructure;
+using ForensicGraph.Infrastructure.Seeding;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +27,11 @@ builder.Services.AddForensicGraphInfrastructure(builder.Configuration);
 var app = builder.Build();
 
 await app.ApplyForensicGraphMigrationsAsync();
+
+if (app.Environment.IsDevelopment())
+{
+    await DatabaseSeeder.SeedAsync(app.Services);
+}
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
