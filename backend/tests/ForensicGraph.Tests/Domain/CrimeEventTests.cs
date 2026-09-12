@@ -16,6 +16,7 @@ public class CrimeEventTests
             id,
             title: "Robbery at Main St.",
             description: "Armed robbery reported at 09:00.",
+            address: "Main St. 42, Prague",
             occurredAt: OccurredUtc,
             severity: 3,
             latitude: 50.0755,
@@ -25,6 +26,7 @@ public class CrimeEventTests
         Assert.Equal(id, evt.Id);
         Assert.Equal("Robbery at Main St.", evt.Title);
         Assert.Equal("Armed robbery reported at 09:00.", evt.Description);
+        Assert.Equal("Main St. 42, Prague", evt.Address);
         Assert.Equal(OccurredUtc, evt.OccurredAt);
         Assert.Equal(DateTimeKind.Utc, evt.OccurredAt.Kind);
         Assert.Equal(3, evt.Severity);
@@ -32,6 +34,38 @@ public class CrimeEventTests
         Assert.Equal(14.4378, evt.Longitude);
         Assert.Equal(NowUtc, evt.CreatedAt);
         Assert.Equal(NowUtc, evt.UpdatedAt);
+        Assert.Empty(evt.Persons);
+        Assert.Empty(evt.OutgoingLinks);
+    }
+
+    [Fact]
+    public void Create_WithoutAddress_StoresNull()
+    {
+        var evt = CrimeEvent.Create(
+            Guid.NewGuid(), "Title", null, address: null,
+            OccurredUtc, 1, null, null, NowUtc);
+
+        Assert.Null(evt.Address);
+    }
+
+    [Fact]
+    public void Create_WithBlankAddress_NormalizesToNull()
+    {
+        var evt = CrimeEvent.Create(
+            Guid.NewGuid(), "Title", null, address: "   ",
+            OccurredUtc, 1, null, null, NowUtc);
+
+        Assert.Null(evt.Address);
+    }
+
+    [Fact]
+    public void Create_WithAddressTooLong_Throws()
+    {
+        var tooLong = new string('a', CrimeEvent.AddressMaxLength + 1);
+
+        Assert.Throws<ArgumentException>(() => CrimeEvent.Create(
+            Guid.NewGuid(), "Title", null, address: tooLong,
+            OccurredUtc, 1, null, null, NowUtc));
     }
 
     [Theory]
@@ -40,7 +74,7 @@ public class CrimeEventTests
     public void Create_WithEmptyTitle_Throws(string title)
     {
         Assert.Throws<ArgumentException>(() => CrimeEvent.Create(
-            Guid.NewGuid(), title, null, OccurredUtc, 1, null, null, NowUtc));
+            Guid.NewGuid(), title, null, null, OccurredUtc, 1, null, null, NowUtc));
     }
 
     [Theory]
@@ -50,21 +84,21 @@ public class CrimeEventTests
     public void Create_WithSeverityOutOfRange_Throws(int severity)
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => CrimeEvent.Create(
-            Guid.NewGuid(), "Title", null, OccurredUtc, severity, null, null, NowUtc));
+            Guid.NewGuid(), "Title", null, null, OccurredUtc, severity, null, null, NowUtc));
     }
 
     [Fact]
     public void Create_WithLatitudeButNoLongitude_Throws()
     {
         Assert.Throws<ArgumentException>(() => CrimeEvent.Create(
-            Guid.NewGuid(), "Title", null, OccurredUtc, 3, latitude: 50.0, longitude: null, NowUtc));
+            Guid.NewGuid(), "Title", null, null, OccurredUtc, 3, latitude: 50.0, longitude: null, NowUtc));
     }
 
     [Fact]
     public void Create_WithLongitudeButNoLatitude_Throws()
     {
         Assert.Throws<ArgumentException>(() => CrimeEvent.Create(
-            Guid.NewGuid(), "Title", null, OccurredUtc, 3, latitude: null, longitude: 14.0, NowUtc));
+            Guid.NewGuid(), "Title", null, null, OccurredUtc, 3, latitude: null, longitude: 14.0, NowUtc));
     }
 
     [Fact]
@@ -73,19 +107,20 @@ public class CrimeEventTests
         var unspecified = DateTime.SpecifyKind(OccurredUtc, DateTimeKind.Unspecified);
 
         Assert.Throws<ArgumentException>(() => CrimeEvent.Create(
-            Guid.NewGuid(), "Title", null, unspecified, 3, null, null, NowUtc));
+            Guid.NewGuid(), "Title", null, null, unspecified, 3, null, null, NowUtc));
     }
 
     [Fact]
     public void Update_WithValidArguments_MutatesAndBumpsUpdatedAt()
     {
         var evt = CrimeEvent.Create(
-            Guid.NewGuid(), "Original", null, OccurredUtc, 1, null, null, NowUtc);
+            Guid.NewGuid(), "Original", null, null, OccurredUtc, 1, null, null, NowUtc);
 
         var later = NowUtc.AddHours(1);
         evt.Update(
             title: "Updated",
             description: "New details",
+            address: "New address",
             occurredAt: OccurredUtc,
             severity: 5,
             latitude: 40.0,
@@ -94,6 +129,7 @@ public class CrimeEventTests
 
         Assert.Equal("Updated", evt.Title);
         Assert.Equal("New details", evt.Description);
+        Assert.Equal("New address", evt.Address);
         Assert.Equal(5, evt.Severity);
         Assert.Equal(40.0, evt.Latitude);
         Assert.Equal(-70.0, evt.Longitude);
@@ -105,10 +141,10 @@ public class CrimeEventTests
     public void Update_WithEmptyTitle_Throws()
     {
         var evt = CrimeEvent.Create(
-            Guid.NewGuid(), "Original", null, OccurredUtc, 1, null, null, NowUtc);
+            Guid.NewGuid(), "Original", null, null, OccurredUtc, 1, null, null, NowUtc);
 
         Assert.Throws<ArgumentException>(() => evt.Update(
-            title: "", description: null, occurredAt: OccurredUtc, severity: 1,
+            title: "", description: null, address: null, occurredAt: OccurredUtc, severity: 1,
             latitude: null, longitude: null, nowUtc: NowUtc));
     }
 }

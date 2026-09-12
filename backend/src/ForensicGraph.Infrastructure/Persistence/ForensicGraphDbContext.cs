@@ -1,12 +1,13 @@
 using ForensicGraph.Domain.CrimeEvents;
+using ForensicGraph.Domain.Persons;
 using Microsoft.EntityFrameworkCore;
 
 namespace ForensicGraph.Infrastructure.Persistence;
 
 /// <summary>
 /// EF Core <see cref="DbContext"/> for the Forensic Graph platform.
-/// Currently exposes only crime events; further aggregates (Person, Location, Evidence,
-/// typed relations) will be added in follow-up changes.
+/// Exposes the investigation aggregates: <see cref="CrimeEvent"/>, <see cref="Person"/>,
+/// and the join / link entities <see cref="EventPerson"/> and <see cref="EventLink"/>.
 /// </summary>
 public sealed class ForensicGraphDbContext : DbContext
 {
@@ -16,6 +17,9 @@ public sealed class ForensicGraphDbContext : DbContext
     }
 
     public DbSet<CrimeEvent> CrimeEvents => Set<CrimeEvent>();
+    public DbSet<Person> Persons => Set<Person>();
+    public DbSet<EventPerson> EventPersons => Set<EventPerson>();
+    public DbSet<EventLink> EventLinks => Set<EventLink>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -9,18 +9,25 @@ public sealed class CrimeEvent
 {
     public const int TitleMaxLength = 200;
     public const int DescriptionMaxLength = 2000;
+    public const int AddressMaxLength = 500;
     public const int MinSeverity = 1;
     public const int MaxSeverity = 5;
+
+    private readonly List<EventPerson> _persons = new();
+    private readonly List<EventLink> _outgoingLinks = new();
 
     public Guid Id { get; private set; }
     public string Title { get; private set; } = string.Empty;
     public string? Description { get; private set; }
+    public string? Address { get; private set; }
     public DateTime OccurredAt { get; private set; }
     public int Severity { get; private set; }
     public double? Latitude { get; private set; }
     public double? Longitude { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
+    public IReadOnlyList<EventPerson> Persons => _persons.AsReadOnly();
+    public IReadOnlyList<EventLink> OutgoingLinks => _outgoingLinks.AsReadOnly();
 
     private CrimeEvent()
     {
@@ -30,6 +37,7 @@ public sealed class CrimeEvent
         Guid id,
         string title,
         string? description,
+        string? address,
         DateTime occurredAt,
         int severity,
         double? latitude,
@@ -38,6 +46,7 @@ public sealed class CrimeEvent
     {
         GuardTitle(title);
         GuardDescription(description);
+        GuardAddress(address);
         GuardSeverity(severity);
         GuardCoordinates(latitude, longitude);
         var occurredUtc = EnsureUtc(occurredAt, nameof(occurredAt));
@@ -48,6 +57,7 @@ public sealed class CrimeEvent
             Id = id,
             Title = title,
             Description = description,
+            Address = string.IsNullOrWhiteSpace(address) ? null : address.Trim(),
             OccurredAt = occurredUtc,
             Severity = severity,
             Latitude = latitude,
@@ -60,6 +70,7 @@ public sealed class CrimeEvent
     public void Update(
         string title,
         string? description,
+        string? address,
         DateTime occurredAt,
         int severity,
         double? latitude,
@@ -68,11 +79,13 @@ public sealed class CrimeEvent
     {
         GuardTitle(title);
         GuardDescription(description);
+        GuardAddress(address);
         GuardSeverity(severity);
         GuardCoordinates(latitude, longitude);
 
         Title = title;
         Description = description;
+        Address = string.IsNullOrWhiteSpace(address) ? null : address.Trim();
         OccurredAt = EnsureUtc(occurredAt, nameof(occurredAt));
         Severity = severity;
         Latitude = latitude;
@@ -100,6 +113,15 @@ public sealed class CrimeEvent
         {
             throw new ArgumentException(
                 $"Description must be at most {DescriptionMaxLength} characters.", nameof(description));
+        }
+    }
+
+    private static void GuardAddress(string? address)
+    {
+        if (address is { Length: > AddressMaxLength })
+        {
+            throw new ArgumentException(
+                $"Address must be at most {AddressMaxLength} characters.", nameof(address));
         }
     }
 

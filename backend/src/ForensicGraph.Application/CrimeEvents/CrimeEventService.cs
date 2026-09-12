@@ -45,6 +45,7 @@ public sealed class CrimeEventService
             id: Guid.NewGuid(),
             title: dto.Title,
             description: dto.Description,
+            address: dto.Address,
             occurredAt: dto.OccurredAt,
             severity: dto.Severity,
             latitude: dto.Latitude,

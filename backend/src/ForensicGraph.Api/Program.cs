@@ -15,6 +15,8 @@ builder.Services
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
+builder.Services.AddSingleton(TimeProvider.System);
+
 builder.Services.AddForensicGraphValidation();
 builder.Services.AddForensicGraphSwagger();
 builder.Services.AddForensicGraphCors();
