@@ -350,8 +350,28 @@ public class CrimeEventServiceTests
         Assert.Equal(EventRole.Witness, detail.Persons[0].Role);
         Assert.Single(detail.Links);
         Assert.Equal(e2.Id, detail.Links[0].ToEventId);
-        Assert.Equal("Chase down alley", detail.Links[0].ToEventTitle);
+        Assert.Equal(e2.Id, detail.Links[0].OtherEventId);
+        Assert.Equal("Chase down alley", detail.Links[0].OtherEventTitle);
         Assert.Equal("same suspect", detail.Links[0].Note);
+    }
+
+    [Fact]
+    public async Task GetAsync_includes_incoming_links_from_the_peer_side()
+    {
+        var (service, _, _, _) = BuildService();
+        var e1 = await service.CreateAsync(ValidWrite() with { Title = "First reported" }, CancellationToken.None);
+        var e2 = await service.CreateAsync(ValidWrite() with { Title = "Related later" }, CancellationToken.None);
+        // e1 links to e2; when we open e2, the link must still show up.
+        await service.LinkEventAsync(e1.Id, e2.Id, "same suspect", CancellationToken.None);
+
+        var detailFromPeer = await service.GetAsync(e2.Id, CancellationToken.None);
+
+        Assert.Single(detailFromPeer.Links);
+        var link = detailFromPeer.Links[0];
+        Assert.Equal(e1.Id, link.FromEventId);
+        Assert.Equal(e2.Id, link.ToEventId);
+        Assert.Equal(e1.Id, link.OtherEventId);
+        Assert.Equal("First reported", link.OtherEventTitle);
     }
 
     // ---- Test infrastructure ----------------------------------------------
@@ -479,6 +499,16 @@ public class CrimeEventServiceTests
             Links.Add(link);
             Operations.Add($"Link:{link.FromEventId}->{link.ToEventId}");
             return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyList<EventLink>> GetIncomingLinksAsync(
+            Guid toEventId,
+            CancellationToken cancellationToken)
+        {
+            IReadOnlyList<EventLink> incoming = Links
+                .Where(l => l.ToEventId == toEventId)
+                .ToList();
+            return Task.FromResult(incoming);
         }
 
         public Task RemoveLinkAsync(Guid fromEventId, Guid toEventId, CancellationToken cancellationToken)

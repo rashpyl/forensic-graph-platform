@@ -45,6 +45,15 @@ public interface ICrimeEventRepository
 
     Task AddLinkAsync(EventLink link, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Returns every link whose <c>ToEventId</c> equals the given id — i.e. the
+    /// set of "incoming" edges pointing at this event. Used so the event
+    /// detail projection can surface links that were created by the peer side.
+    /// </summary>
+    Task<IReadOnlyList<EventLink>> GetIncomingLinksAsync(
+        Guid toEventId,
+        CancellationToken cancellationToken);
+
     Task RemoveLinkAsync(
         Guid fromEventId,
         Guid toEventId,

@@ -14,10 +14,7 @@ internal static class ValidationConfigurationExtensions
     {
         var applicationAssembly = typeof(Application.AssemblyMarker).Assembly;
         services.AddValidatorsFromAssembly(applicationAssembly);
-        services.AddFluentValidationAutoValidation(options =>
-        {
-            options.DisableDataAnnotationsValidation = false;
-        });
+        services.AddFluentValidationAutoValidation();
         return services;
     }
 }

@@ -39,6 +39,11 @@ export const usePersonsStore = defineStore('persons', () => {
     return created
   }
 
+  async function remove(id: string): Promise<void> {
+    await personsApi.remove(id)
+    persons.value = persons.value.filter((p) => p.id !== id)
+  }
+
   return {
     persons,
     isLoading,
@@ -46,5 +51,6 @@ export const usePersonsStore = defineStore('persons', () => {
     fetchAll,
     search,
     create,
+    remove,
   }
 })

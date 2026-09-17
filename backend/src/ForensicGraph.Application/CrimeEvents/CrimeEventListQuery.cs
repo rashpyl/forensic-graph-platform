@@ -1,7 +1,7 @@
 namespace ForensicGraph.Application.CrimeEvents;
 
 /// <summary>
-/// Query parameters accepted by <c>GET /api/crime-events</c>.
+/// Query parameters accepted by <c>GET /api/events</c>.
 /// All fields are optional; use <see cref="Normalize"/> to produce a query with sane defaults
 /// and paging values clamped to the allowed range.
 /// </summary>

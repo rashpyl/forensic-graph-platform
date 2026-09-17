@@ -20,8 +20,10 @@ export interface EventPersonDto {
 }
 
 export interface EventLinkDto {
+  fromEventId: string
   toEventId: string
-  toEventTitle: string
+  otherEventId: string
+  otherEventTitle: string
   note?: string | null
   createdAt: string
 }

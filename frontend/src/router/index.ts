@@ -10,11 +10,9 @@ const router = createRouter({
       component: MapView,
     },
     {
-      // Kept for reference; the Cytoscape prototype is not linked from the
-      // navbar but remains reachable at /graph while we iterate on the map UI.
-      path: '/graph',
-      name: 'graph-editor',
-      component: () => import('@/views/GraphEditorView.vue'),
+      path: '/persons',
+      name: 'persons',
+      component: () => import('@/views/PersonsView.vue'),
     },
   ],
 })

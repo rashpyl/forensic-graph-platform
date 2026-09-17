@@ -43,19 +43,25 @@ public sealed class CrimeEventService
         var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken)
             ?? throw new NotFoundException(nameof(CrimeEvent), id);
 
+        var incomingLinks = await _repository.GetIncomingLinksAsync(id, cancellationToken);
+
         var personIds = entity.Persons.Select(ep => ep.PersonId).Distinct().ToArray();
-        var targetIds = entity.OutgoingLinks.Select(l => l.ToEventId).Distinct().ToArray();
+        var relatedEventIds = entity.OutgoingLinks
+            .Select(l => l.ToEventId)
+            .Concat(incomingLinks.Select(l => l.FromEventId))
+            .Distinct()
+            .ToArray();
 
         var persons = personIds.Length == 0
             ? Array.Empty<Person>()
             : await _personRepository.GetManyAsync(personIds, cancellationToken);
         var personLookup = persons.ToDictionary(p => p.Id);
 
-        var titleLookup = targetIds.Length == 0
+        IReadOnlyDictionary<Guid, string> titleLookup = relatedEventIds.Length == 0
             ? new Dictionary<Guid, string>()
-            : (Dictionary<Guid, string>)await _repository.GetTitlesAsync(targetIds, cancellationToken);
+            : await _repository.GetTitlesAsync(relatedEventIds, cancellationToken);
 
-        return entity.ToDetailDto(personLookup, titleLookup);
+        return entity.ToDetailDto(personLookup, incomingLinks, titleLookup);
     }
 
     public async Task<CrimeEventDto> CreateAsync(

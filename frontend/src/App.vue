@@ -1,7 +1,14 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useUiStore } from '@/stores/ui'
+import NewPersonDialog from '@/components/NewPersonDialog.vue'
+import AboutModal from '@/components/AboutModal.vue'
 
 const uiStore = useUiStore()
+const route = useRoute()
+
+const isMapRoute = computed(() => route.name === 'map')
 
 function startNewEvent() {
   uiStore.startPickingLocation()
@@ -12,14 +19,23 @@ function startNewEvent() {
   <div id="app-layout">
     <header class="topbar">
       <span class="topbar-title">🔍 Forensic Graph Platform</span>
+      <nav class="topbar-links">
+        <RouterLink to="/" class="nav-link" :class="{ active: isMapRoute }">Map</RouterLink>
+        <RouterLink to="/persons" class="nav-link" active-class="active">Persons</RouterLink>
+      </nav>
       <nav class="topbar-actions">
-        <button class="nav-btn" @click="startNewEvent">
+        <button
+          class="nav-btn"
+          :disabled="!isMapRoute"
+          :title="isMapRoute ? 'Pick a spot on the map' : 'Switch to the map to place a new event'"
+          @click="startNewEvent"
+        >
           <span class="nav-icon">＋</span> New Event
         </button>
-        <button class="nav-btn" disabled title="Coming in the next chunk">
+        <button class="nav-btn" @click="uiStore.openNewPersonDialog()">
           <span class="nav-icon">👤</span> New Person
         </button>
-        <button class="nav-btn" disabled title="Coming later">
+        <button class="nav-btn" @click="uiStore.openAboutModal()">
           <span class="nav-icon">ℹ</span> About
         </button>
       </nav>
@@ -27,6 +43,9 @@ function startNewEvent() {
     <main class="main-content">
       <RouterView />
     </main>
+
+    <NewPersonDialog />
+    <AboutModal />
   </div>
 </template>
 
@@ -64,6 +83,23 @@ body {
   letter-spacing: 0.02em;
   color: #a5b4fc;
 }
+
+.topbar-links {
+  display: flex;
+  gap: 4px;
+}
+
+.nav-link {
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-link:hover { background: #232735; color: #e2e8f0; }
+.nav-link.active { background: #312e81; color: #c7d2fe; }
 
 .topbar-actions {
   display: flex;

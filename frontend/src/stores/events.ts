@@ -98,14 +98,14 @@ export const useEventsStore = defineStore('events', () => {
     note?: string | null,
   ): Promise<void> {
     await eventsApi.link(fromId, toId, note ?? null)
-    if (selected.value?.id === fromId) {
+    if (selected.value?.id === fromId || selected.value?.id === toId) {
       await refreshSelected()
     }
   }
 
   async function unlinkEvent(fromId: string, toId: string): Promise<void> {
     await eventsApi.unlink(fromId, toId)
-    if (selected.value?.id === fromId) {
+    if (selected.value?.id === fromId || selected.value?.id === toId) {
       await refreshSelected()
     }
   }
