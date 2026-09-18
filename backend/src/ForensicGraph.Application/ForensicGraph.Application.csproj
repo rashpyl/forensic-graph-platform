@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\ForensicGraph.Domain\ForensicGraph.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <RootNamespace>ForensicGraph.Application</RootNamespace>
+  </PropertyGroup>
+
+</Project>
