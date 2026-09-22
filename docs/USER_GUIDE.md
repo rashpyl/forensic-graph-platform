@@ -34,6 +34,8 @@ Three navbar actions are always available:
 > **Note.** *New Event* is only enabled on the Map page — placing an event
 > requires clicking the map to fix its coordinates.
 
+![Main map view.](./images/user-guide/1.png)
+
 ---
 
 ## 2. Reading the map
@@ -69,6 +71,8 @@ Three navbar actions are always available:
    | Occurred at   | Date and time in **local** (European) time. Required.      |
    | Severity      | 1–5. The colour swatch updates live.                       |
 
+   ![New-event dialog.](./images/user-guide/2.png)
+
 5. Click **Create event**. On success the dialog closes, the new pin is
    added to the map, and its detail panel opens automatically.
 
@@ -80,12 +84,16 @@ Three navbar actions are always available:
 
 Clicking any marker slides a panel in from the right with four sections:
 
+![Event detail panel.](./images/user-guide/3.png)
+
 ### 4.1 Summary
 Title, severity chip, address, occurred-at (formatted `dd.mm.yyyy HH:mm`
 in your local time zone), and description.
 
 ### 4.2 Persons
 The list of persons already attached to this event, each with their role.
+
+![Attaching a person to an event.](./images/user-guide/4.png)
 
 **Add a person**
 1. Type at least two letters of a name into the *Add person* box.
@@ -105,6 +113,8 @@ event and add them via the autocomplete.
 
 ### 4.3 Linked events
 Events another officer (or you) has manually marked as related.
+
+![Linked events section.](./images/user-guide/5.png)
 
 **Link another event**
 1. Start typing the other event's title in the *Link event* box.
@@ -131,6 +141,8 @@ marker.
 ## 5. Persons page
 
 Navigate via the **Persons** link in the navbar.
+
+![Persons page.](./images/user-guide/6.png)
 
 - The table lists every person, with their citizenships, passport numbers
   (all shown as chips), phone, and — under their name — physical

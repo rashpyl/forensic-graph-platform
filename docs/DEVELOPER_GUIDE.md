@@ -261,7 +261,87 @@ cd frontend && npm run build
 
 ---
 
-## 7. Git conventions
+## 7. API reference (Doxygen)
+
+The backend ships with a Doxygen configuration that renders the XML
+`/// <summary>` comments (methods, classes, DTOs, controllers) into a
+browsable HTML site. Use it as a quick reference for individual types
+that this guide does not cover in prose.
+
+### 7.1 Prerequisites
+
+Install Doxygen once per machine:
+
+```bash
+# macOS
+brew install doxygen
+
+# Debian / Ubuntu
+sudo apt-get install doxygen
+
+# Windows
+winget install DimitriVanHeesch.Doxygen
+```
+
+Optional (enables class-diagram and dependency-graph output):
+
+```bash
+brew install graphviz            # macOS
+sudo apt-get install graphviz    # Debian / Ubuntu
+```
+
+After installing Graphviz, flip `HAVE_DOT = YES` in `Doxyfile` at the
+repo root, then regenerate.
+
+### 7.2 Generate the docs
+
+From the repository root:
+
+```bash
+doxygen Doxyfile
+```
+
+Output is written to `docs/api/html/`. Any warnings land in
+`docs/api/doxygen-warnings.log`.
+
+The `docs/api/` folder is generated output and is not committed —
+regenerate whenever the XML doc comments change.
+
+### 7.3 Open the docs
+
+```bash
+# macOS
+open docs/api/html/index.html
+
+# Linux
+xdg-open docs/api/html/index.html
+
+# Windows (PowerShell)
+Start-Process docs/api/html/index.html
+```
+
+The landing page is this Developer Guide plus the top-level README.
+Use the left-hand tree or the search box (top-right) to jump into
+individual namespaces:
+
+- `ForensicGraph.Domain` — aggregate roots and value objects
+- `ForensicGraph.Application` — services, DTOs, repository contracts
+- `ForensicGraph.Infrastructure` — EF Core context, configurations, repositories
+- `ForensicGraph.Api` — controllers, request models, middleware
+
+### 7.4 Serve the docs locally (optional)
+
+If you prefer a URL over `file://`, any static server works:
+
+```bash
+cd docs/api/html
+python3 -m http.server 8000
+# open http://localhost:8000
+```
+
+---
+
+## 8. Git conventions
 
 - Trunk is `develop`. `main` is protected and receives releases only.
 - Every feature ships as `feature/<slug>` merged with a PR into
@@ -281,7 +361,7 @@ cd frontend && npm run build
 
 ---
 
-## 8. Known limitations (intentional for MVP)
+## 9. Known limitations (intentional for MVP)
 
 - **No authentication.** The API is open on `localhost` only. Adding
   auth is a diploma-scope extension, not annual-project scope.

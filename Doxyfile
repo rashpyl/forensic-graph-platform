@@ -1,0 +1,91 @@
+# Doxyfile for Forensic Graph Platform backend (C#/.NET)
+# Generates HTML API documentation from XML doc comments (/// <summary>).
+#
+# Usage:
+#   doxygen Doxyfile
+# Output: docs/api/html/index.html
+
+#---------------------------------------------------------------------------
+# Project related configuration
+#---------------------------------------------------------------------------
+PROJECT_NAME           = "Forensic Graph Platform - Backend API"
+PROJECT_BRIEF          = "Investigative case-mapping backend built with ASP.NET Core, EF Core and PostgreSQL."
+PROJECT_NUMBER         = "1.0"
+OUTPUT_DIRECTORY       = docs/api
+OUTPUT_LANGUAGE        = English
+CREATE_SUBDIRS         = NO
+ALLOW_UNICODE_NAMES    = YES
+
+#---------------------------------------------------------------------------
+# Build configuration - what to include
+#---------------------------------------------------------------------------
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_PACKAGE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+INTERNAL_DOCS          = NO
+CASE_SENSE_NAMES       = YES
+SHOW_INCLUDE_FILES     = NO
+SORT_MEMBER_DOCS       = YES
+SORT_BRIEF_DOCS        = YES
+
+#---------------------------------------------------------------------------
+# C# specifics — Doxygen uses "Java" mode for C# XML doc comments
+#---------------------------------------------------------------------------
+OPTIMIZE_OUTPUT_JAVA   = YES
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = NO
+MULTILINE_CPP_IS_BRIEF = NO
+
+# Recognize C# XML doc tags (<summary>, <param>, <returns>, <see>, <c>, ...)
+BUILTIN_STL_SUPPORT    = NO
+
+#---------------------------------------------------------------------------
+# Input files
+#---------------------------------------------------------------------------
+INPUT                  = backend/src README.md docs/DEVELOPER_GUIDE.md
+FILE_PATTERNS          = *.cs *.md
+RECURSIVE              = YES
+EXCLUDE_PATTERNS       = */bin/* */obj/* */Migrations/* *ModelSnapshot*
+USE_MDFILE_AS_MAINPAGE = README.md
+
+#---------------------------------------------------------------------------
+# HTML output
+#---------------------------------------------------------------------------
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+HTML_FILE_EXTENSION    = .html
+HTML_COLORSTYLE        = LIGHT
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+FULL_SIDEBAR           = NO
+SEARCHENGINE           = YES
+
+#---------------------------------------------------------------------------
+# Disable outputs we do not need
+#---------------------------------------------------------------------------
+GENERATE_LATEX         = NO
+GENERATE_XML           = NO
+GENERATE_MAN           = NO
+GENERATE_RTF           = NO
+GENERATE_DOCBOOK       = NO
+
+#---------------------------------------------------------------------------
+# Diagrams
+#---------------------------------------------------------------------------
+HAVE_DOT               = NO
+CLASS_DIAGRAMS         = YES
+UML_LOOK               = NO
+
+#---------------------------------------------------------------------------
+# Warnings
+#---------------------------------------------------------------------------
+QUIET                  = NO
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = NO
+WARN_LOGFILE           = docs/api/doxygen-warnings.log
