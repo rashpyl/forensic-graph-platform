@@ -1,0 +1,22 @@
+# .NET build output
+bin/
+obj/
+*.user
+.vs/
+
+# Frontend
+node_modules/
+dist/
+*.tsbuildinfo
+.vite/
+
+# Local configuration and secrets (see .env.example)
+.env
+.env.local
+.env.*.local
+!frontend/.env.development
+
+# Editors and OS
+.idea/
+.DS_Store
+Thumbs.db

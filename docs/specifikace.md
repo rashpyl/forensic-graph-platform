@@ -2,15 +2,15 @@
 
 ## Název práce
 
-Návrh a implementace grafové analytické aplikace pro vizualizaci, predikci a ukladání kriminalistických událostí.
+Návrh a implementace grafové analytické aplikace pro vizualizaci, predikci a ukládání kriminalistických událostí
 
 ---
 
 ## 1. Úvod a motivace
 
-Kriminalistická analýza pracuje s rozsáhlými a silně propojenými daty – událostmi, osobami, lokalitami, důkazy a jejich vzájemnými vztahy. Relační databázové systémy nejsou vždy optimální pro reprezentaci komplexních vztahových struktur.
+Kriminalistická analýza pracuje s rozsáhlými a silně propojenými daty – událostmi, osobami, lokalitami, důkazy a jejich vzájemnými vztahy. Pro analytika často nejsou podstatné jednotlivé záznamy, ale vazby mezi nimi: tatáž osoba ve více případech, několik událostí na stejném místě nebo nepřímé spojení dvou osob přes společné známé.
 
-Grafový přístup umožňuje přirozenou reprezentaci vazeb mezi entitami a efektivní provádění vztahových dotazů. Tato práce se zaměřuje na návrh a implementaci prototypu systému, který využívá grafovou databázi pro analytické zpracování kriminalistických dat.
+Grafový přístup umožňuje takové vazby přirozeně reprezentovat a dotazovat se na ně. Tato práce se zaměřuje na návrh a implementaci prototypu systému, který nad kriminalistickými daty používá grafový datový model. Model je uložen v relační databázi PostgreSQL a grafové dotazy (okolí uzlu, cesty mezi entitami) jsou realizovány rekurzivními dotazy SQL. Součástí práce je zdůvodnění této volby oproti specializované grafové databázi.
 
 ---
 
@@ -19,9 +19,10 @@ Grafový přístup umožňuje přirozenou reprezentaci vazeb mezi entitami a efe
 Hlavní cíle práce:
 
 - Navrhnout grafový datový model kriminalistických událostí
-- Implementovat desktopovou aplikaci pro správu a vizualizaci těchto dat
-- Realizovat analytický modul nad grafovou strukturou umožňující výpočet grafových metrik (např. degree centrality), vyhledávání cest mezi entitami, analýzu propojenosti a agregované statistické dotazy nad kriminalistickými daty.
-- Implementovat a experimentálně vyhodnotit metodu predikce vazeb (link prediction)
+- Implementovat webovou aplikaci pro správu a vizualizaci těchto dat, určenou pro více uživatelů s rozdílnými oprávněními
+- Realizovat analytický modul nad grafovou strukturou umožňující výpočet grafových metrik (např. degree centrality), vyhledávání cest mezi entitami, analýzu propojenosti a agregované statistické dotazy nad kriminalistickými daty
+- Implementovat a experimentálně vyhodnotit metody predikce vazeb (link prediction)
+- Zajistit ochranu citlivých dat a dohledatelnost změn
 - Diskutovat etické aspekty prediktivní kriminalistiky
 
 Výstupem bude funkční prototyp systému a experimentální vyhodnocení navržených metod.
@@ -54,11 +55,12 @@ Systém musí umožňovat:
 
 ### 3.3 Grafová vizualizace
 
-Po výběru konkrétní události bude možné:
+Po výběru konkrétní události nebo osoby bude možné:
 
 - Zobrazit lokální graf jejích vztahů
-- Vizualizovat osoby, související události a další entity
+- Vizualizovat osoby, související události, lokality a další entity
 - Interaktivně rozšiřovat graf
+- Zobrazit predikované vazby odlišeně od vazeb zaznamenaných, včetně jejich skóre a zdůvodnění
 
 ---
 
@@ -73,9 +75,20 @@ Systém bude poskytovat:
 
 ---
 
+### 3.5 Uživatelé a oprávnění
+
+Systém musí umožňovat:
+
+- Přihlášení uživatelů
+- Přidělení rolí s rozdílnými oprávněními (administrátor, analytik, čtenář)
+- Správu uživatelských účtů administrátorem
+- Souběžnou práci více uživatelů bez nechtěného přepsání cizích změn
+
+---
+
 ## 4. Datový model
 
-Systém bude založen na Postgres databázi.
+Grafový datový model bude uložen v relační databázi PostgreSQL. Uzly i vztahy budou reprezentovány tabulkami, grafové dotazy rekurzivními dotazy SQL.
 
 ### 4.1 Typy uzlů
 
@@ -93,7 +106,7 @@ Systém bude založen na Postgres databázi.
 
 Každý uzel a vztah bude mít definované atributy (časová značka, role, typ, váha vztahu apod.).
 
-Součástí práce bude zdůvodnění zvoleného grafového modelu a stručné porovnání s relační reprezentací.
+Součástí práce bude zdůvodnění zvoleného grafového modelu a porovnání uložení grafu v relační databázi se specializovanou grafovou databází.
 
 ---
 
@@ -102,7 +115,7 @@ Součástí práce bude zdůvodnění zvoleného grafového modelu a stručné p
 Systém bude navržen jako webová aplikace:
 
 - **Backend** – REST API
-- **Datová vrstva** – Postgres databáze
+- **Datová vrstva** – databáze PostgreSQL
 - **Frontend** – webové rozhraní (mapa + graf)
 - **ML modul** – samostatná část pro trénování a vyhodnocení modelů
 
@@ -112,9 +125,9 @@ Architektura bude dokumentována pomocí diagramů.
 
 ## 6. ML komponenta
 
-V práci bude implementována úloha **predikce vazeb v grafu (link prediction)**.
+V práci bude implementována úloha **predikce vazeb v grafu (link prediction)**: odhad pravděpodobnosti, že mezi dvěma uzly existuje vazba, která dosud není v datech zaznamenána. Výsledky slouží analytikovi jako podnět k prověření, nikoli jako zjištěný fakt.
 
-Cílem je předpovědět pravděpodobnost vzniku nové vazby mezi dvěma uzly.
+Primární úlohou je predikce skrytých vazeb mezi osobami. Volitelně bude stejný přístup použit pro vyhledávání souvisejících událostí (např. události hlášené odděleně, ale pravděpodobně způsobené stejnými aktéry).
 
 ### Implementované metody:
 
@@ -134,7 +147,7 @@ Cílem je předpovědět pravděpodobnost vzniku nové vazby mezi dvěma uzly.
 
 Experimentální část bude zahrnovat:
 
-- Popis datasetu
+- Popis datasetu (veřejně dostupná síť kriminálních vazeb a syntetická data se strukturou odpovídající reálným sítím)
 - Rozdělení dat na trénovací a testovací část
 - Srovnání metod
 - Interpretaci výsledků
@@ -147,10 +160,24 @@ Experimentální část bude zahrnovat:
 - Přehledné uživatelské rozhraní
 - Reprodukovatelnost experimentů
 - Dokumentovaný zdrojový kód
+- Automatizované testy
 
 ---
 
-## 9. Etické aspekty
+## 9. Bezpečnost
+
+Systém musí zajistit bezpečnost citlivých dat a odolnost vůči běžným útokům, zejména:
+
+- Autentizaci uživatelů a autorizaci každého požadavku podle role
+- Ochranu přihlášení proti hádání hesel
+- Ochranu komunikace mezi webovým rozhraním a serverem (HTTPS, ochrana proti CSRF a XSS)
+- Validaci vstupních dat při vytváření a změně záznamů
+- Omezení zobrazení citlivých osobních údajů podle role
+- Záznam všech změn dat (kdo, kdy, co změnil) v auditním logu, který nelze zpětně upravit
+
+---
+
+## 10. Etické aspekty
 
 Práce bude obsahovat diskusi:
 
@@ -160,11 +187,9 @@ Práce bude obsahovat diskusi:
 
 ---
 
-## 10. Očekávaný výstup
+## 11. Očekávaný výstup
 
 - Funkční prototyp aplikace
 - Implementovaný a vyhodnocený model predikce vazeb
 - Zdokumentovaná architektura systému
 - Kompletní text bakalářské práce
-
-## 11. zajistit bezpečnost senzitivních dat, vyhnout se možným útokům (při přidání nových dat do DB nebo změně starých, při komunikaci mezi nodami)
