@@ -60,6 +60,16 @@ function pushChip(target: string[], draft: string) {
   }
 }
 
+// Pasted lists ("A123, B456") become separate chips instead of one long value.
+function handleChipPaste(e: ClipboardEvent, target: string[]) {
+  const text = e.clipboardData?.getData('text') ?? ''
+  if (!/[,\n]/.test(text)) return
+  e.preventDefault()
+  for (const part of text.split(/[,\n]/)) {
+    pushChip(target, part)
+  }
+}
+
 function handleCitizenshipKeydown(e: KeyboardEvent) {
   if (e.key === 'Enter' || e.key === ',') {
     e.preventDefault()
@@ -157,6 +167,7 @@ async function submit() {
               class="chip-input-field"
               maxlength="60"
               @keydown="handleCitizenshipKeydown"
+              @paste="handleChipPaste($event, citizenships)"
             />
           </div>
         </div>
@@ -176,13 +187,14 @@ async function submit() {
               class="chip-input-field"
               maxlength="40"
               @keydown="handlePassportKeydown"
+              @paste="handleChipPaste($event, passportNumbers)"
             />
           </div>
         </div>
 
         <label class="field">
-          <span class="field-label">Phone</span>
-          <input v-model="phone" type="tel" maxlength="40" placeholder="+420 …" />
+          <span class="field-label">Phone numbers</span>
+          <input v-model="phone" type="tel" maxlength="200" placeholder="+420 …, +421 … (comma-separated)" />
         </label>
 
         <label class="field">

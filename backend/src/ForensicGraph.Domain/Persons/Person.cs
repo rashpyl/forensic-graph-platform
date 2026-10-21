@@ -10,7 +10,7 @@ namespace ForensicGraph.Domain.Persons;
 public sealed class Person
 {
     public const int NameMaxLength = 100;
-    public const int PhoneMaxLength = 40;
+    public const int PhoneMaxLength = 200;
     public const int PhysicalDescriptionMaxLength = 2000;
     public const int CitizenshipMaxLength = 60;
     public const int PassportMaxLength = 40;
@@ -50,7 +50,7 @@ public sealed class Person
             Id = id,
             FirstName = firstName.Trim(),
             LastName = lastName.Trim(),
-            Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim(),
+            Phone = NormalizePhone(phone),
             PhysicalDescription = string.IsNullOrWhiteSpace(physicalDescription)
                 ? null
                 : physicalDescription.Trim(),
@@ -77,7 +77,7 @@ public sealed class Person
 
         FirstName = firstName.Trim();
         LastName = lastName.Trim();
-        Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
+        Phone = NormalizePhone(phone);
         PhysicalDescription = string.IsNullOrWhiteSpace(physicalDescription)
             ? null
             : physicalDescription.Trim();
@@ -133,6 +133,24 @@ public sealed class Person
             throw new ArgumentException(
                 $"{paramName} must be at most {NameMaxLength} characters.", paramName);
         }
+    }
+
+    /// <summary>
+    /// A person may have several numbers, stored in the single <c>phone</c> column as a
+    /// comma-separated list. Blanks and case-insensitive duplicates are dropped.
+    /// </summary>
+    private static string? NormalizePhone(string? phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            return null;
+        }
+
+        var numbers = phone
+            .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+        var joined = string.Join(", ", numbers);
+        return joined.Length == 0 ? null : joined;
     }
 
     private static void GuardPhone(string? phone)

@@ -166,8 +166,10 @@ Click **👤 New Person**.
 | Citizenships         | Multi-value. Type a value, press **Enter** or **comma**  |
 |                      | to commit; **Backspace** in the empty field removes the  |
 |                      | last chip; the **×** on a chip removes just that one.    |
-| Passport numbers     | Same chip mechanics as citizenships.                     |
-| Phone                | Optional. Max 40 characters.                             |
+| Passport numbers     | Same chip mechanics as citizenships; a pasted list       |
+|                      | like `A123, B456` is split into separate chips.          |
+| Phone                | Optional. Several numbers separated by commas.           |
+|                      | Max 200 characters in total.                             |
 | Physical description | Optional multi-line notes. Max 2000 characters.          |
 
 Click **Create person**. On success the dialog closes and the new person
