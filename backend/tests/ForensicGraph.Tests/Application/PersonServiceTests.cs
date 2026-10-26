@@ -1,6 +1,7 @@
 using ForensicGraph.Application.Common;
 using ForensicGraph.Application.Persons;
 using ForensicGraph.Domain.Persons;
+using ForensicGraph.Tests.TestDoubles;
 
 namespace ForensicGraph.Tests.Application;
 
@@ -117,12 +118,63 @@ public class PersonServiceTests
         Assert.Equal(PersonListQuery.MaxPageSize, result.PageSize);
     }
 
+    [Fact]
+    public async Task Viewer_gets_masked_passport_and_phone()
+    {
+        var (analystService, repo, time) = BuildService();
+        var created = await analystService.CreateAsync(ValidWrite() with { PassportNumbers = new[] { "AB1234512" } }, CancellationToken.None);
+        var viewerService = new PersonService(repo, time, FakeCurrentUser.Viewer());
+
+        var fetched = await viewerService.GetAsync(created.Id, CancellationToken.None);
+
+        Assert.Equal(new[] { "AB•••••12" }, fetched.PassportNumbers);
+        Assert.Equal("+4•••••••••33", fetched.Phone);
+        Assert.Equal("Anna", fetched.FirstName);
+    }
+
+    [Fact]
+    public async Task Viewer_gets_each_phone_number_masked_separately()
+    {
+        var (analystService, repo, time) = BuildService();
+        var created = await analystService.CreateAsync(
+            ValidWrite() with { Phone = "+420111222333, +421999888777" }, CancellationToken.None);
+        var viewerService = new PersonService(repo, time, FakeCurrentUser.Viewer());
+
+        var fetched = await viewerService.GetAsync(created.Id, CancellationToken.None);
+
+        Assert.Equal("+4•••••••••33, +4•••••••••77", fetched.Phone);
+    }
+
+    [Fact]
+    public async Task Analyst_gets_unmasked_passport_and_phone()
+    {
+        var (service, _, _) = BuildService();
+        var created = await service.CreateAsync(ValidWrite(), CancellationToken.None);
+
+        var fetched = await service.GetAsync(created.Id, CancellationToken.None);
+
+        Assert.Equal(new[] { "P123" }, fetched.PassportNumbers);
+        Assert.Equal("+420111222333", fetched.Phone);
+    }
+
+    [Fact]
+    public async Task Viewer_masking_applies_to_list_results()
+    {
+        var (analystService, repo, time) = BuildService();
+        await analystService.CreateAsync(ValidWrite(), CancellationToken.None);
+        var viewerService = new PersonService(repo, time, FakeCurrentUser.Viewer());
+
+        var page = await viewerService.ListAsync(new PersonListQuery(), CancellationToken.None);
+
+        Assert.All(page.Items, p => Assert.DoesNotContain("P123", p.PassportNumbers));
+    }
+
     private static (PersonService Service, StubPersonRepository Repo, TestTimeProvider Time)
         BuildService()
     {
         var time = new TestTimeProvider(Now);
         var repo = new StubPersonRepository();
-        var service = new PersonService(repo, time);
+        var service = new PersonService(repo, time, FakeCurrentUser.Analyst());
         return (service, repo, time);
     }
 

@@ -24,4 +24,12 @@ public static class SensitiveDataMasker
     }
 
     public static string? MaskOrNull(string? value) => value is null ? null : Mask(value);
+
+    /// <summary>Masks every item of a comma-separated list separately, keeping the separators.</summary>
+    public static string? MaskEach(string? commaSeparated) =>
+        commaSeparated is null
+            ? null
+            : string.Join(", ", commaSeparated
+                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Select(Mask));
 }
