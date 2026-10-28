@@ -13,6 +13,8 @@ namespace ForensicGraph.Api.Extensions;
 /// <list type="bullet">
 ///   <item><see cref="NotFoundException"/> → 404</item>
 ///   <item><see cref="ConflictException"/> → 409</item>
+///   <item><see cref="ValidationFailedException"/> → 400</item>
+///   <item><see cref="UnauthorizedAccessException"/> → 401</item>
 ///   <item>anything else → 500</item>
 /// </list>
 /// Stack traces are only emitted for 500s in Development.
@@ -66,6 +68,11 @@ internal sealed class GlobalExceptionHandler(
             problem.Detail = exception.Message;
         }
 
+        if (exception is ValidationFailedException validation)
+        {
+            problem.Extensions["errors"] = validation.Errors;
+        }
+
         return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = httpContext,
@@ -80,6 +87,14 @@ internal sealed class GlobalExceptionHandler(
             StatusCodes.Status404NotFound,
             "Resource not found.",
             "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"),
+        ValidationFailedException => (
+            StatusCodes.Status400BadRequest,
+            "One or more validation errors occurred.",
+            "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"),
+        UnauthorizedAccessException => (
+            StatusCodes.Status401Unauthorized,
+            "Authentication is required.",
+            "https://datatracker.ietf.org/doc/html/rfc7235#section-3.1"),
         ConflictException => (
             StatusCodes.Status409Conflict,
             "Request conflicts with the current state.",

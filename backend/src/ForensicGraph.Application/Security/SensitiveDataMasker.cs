@@ -25,7 +25,7 @@ public static class SensitiveDataMasker
 
     public static string? MaskOrNull(string? value) => value is null ? null : Mask(value);
 
-    /// <summary>Masks every item of a comma-separated list separately, keeping the separators.</summary>
+    /// <summary>Masks each item of a comma-separated list separately so the items stay distinguishable.</summary>
     public static string? MaskEach(string? commaSeparated) =>
         commaSeparated is null
             ? null

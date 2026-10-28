@@ -2,7 +2,6 @@ using ForensicGraph.Application.Security;
 
 namespace ForensicGraph.Tests.TestDoubles;
 
-/// <summary>Configurable <see cref="ICurrentUser"/> for unit tests.</summary>
 public sealed class FakeCurrentUser : ICurrentUser
 {
     public FakeCurrentUser(string role, Guid? userId = null, string? userName = null)
