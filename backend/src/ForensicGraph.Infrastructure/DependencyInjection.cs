@@ -1,5 +1,7 @@
 using ForensicGraph.Application.CrimeEvents;
 using ForensicGraph.Application.Persons;
+using ForensicGraph.Application.Users;
+using ForensicGraph.Infrastructure.Identity;
 using ForensicGraph.Infrastructure.CrimeEvents;
 using ForensicGraph.Infrastructure.Persistence;
 using ForensicGraph.Infrastructure.Persons;
@@ -35,6 +37,8 @@ public static class DependencyInjection
 
         services.AddScoped<ICrimeEventRepository, CrimeEventRepository>();
         services.AddScoped<IPersonRepository, PersonRepository>();
+
+        services.AddScoped<IUserAdministrationService, UserAdministrationService>();
 
         services.AddScoped<CrimeEventService>();
         services.AddScoped<PersonService>();
