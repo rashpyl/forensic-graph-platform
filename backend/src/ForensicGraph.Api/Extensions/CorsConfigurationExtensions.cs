@@ -7,6 +7,7 @@ internal static class CorsConfigurationExtensions
     /// <summary>
     /// Registers a CORS policy that allows the Vite dev server
     /// at <c>http://localhost:5173</c> — used only in Development.
+    /// Credentials are allowed so the session cookie travels with requests.
     /// Non-Development environments intentionally have no default policy;
     /// production origins must be configured explicitly.
     /// </summary>
@@ -19,7 +20,8 @@ internal static class CorsConfigurationExtensions
                 policy
                     .WithOrigins("http://localhost:5173")
                     .AllowAnyHeader()
-                    .AllowAnyMethod();
+                    .AllowAnyMethod()
+                    .AllowCredentials();
             });
         });
         return services;

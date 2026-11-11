@@ -1,6 +1,8 @@
 using ForensicGraph.Application.Common;
 using ForensicGraph.Application.Persons;
 using ForensicGraph.Domain.Persons;
+using ForensicGraph.Application.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -44,6 +46,7 @@ public sealed class PersonsController : ControllerBase
 
     /// <summary>Creates a new person.</summary>
     [HttpPost]
+    [Authorize(Policy = Policies.CanEdit)]
     [ProducesResponseType(typeof(PersonDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PersonDto>> Create(
@@ -56,6 +59,7 @@ public sealed class PersonsController : ControllerBase
 
     /// <summary>Fully replaces a person.</summary>
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = Policies.CanEdit)]
     [ProducesResponseType(typeof(PersonDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -69,6 +73,7 @@ public sealed class PersonsController : ControllerBase
 
     /// <summary>Deletes a person. Their assignments to events are removed by cascade.</summary>
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = Policies.CanEdit)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)

@@ -1,6 +1,8 @@
 using ForensicGraph.Application.Common;
 using ForensicGraph.Application.CrimeEvents;
 using ForensicGraph.Domain.CrimeEvents;
+using ForensicGraph.Application.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -47,6 +49,7 @@ public sealed class CrimeEventsController : ControllerBase
 
     /// <summary>Creates a new crime event and returns the persisted representation.</summary>
     [HttpPost]
+    [Authorize(Policy = Policies.CanEdit)]
     [ProducesResponseType(typeof(CrimeEventDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<CrimeEventDto>> Create(
@@ -59,6 +62,7 @@ public sealed class CrimeEventsController : ControllerBase
 
     /// <summary>Fully replaces a crime event.</summary>
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = Policies.CanEdit)]
     [ProducesResponseType(typeof(CrimeEventDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -72,6 +76,7 @@ public sealed class CrimeEventsController : ControllerBase
 
     /// <summary>Deletes a crime event. Assignments and outgoing links are removed by cascade.</summary>
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = Policies.CanEdit)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
@@ -82,6 +87,7 @@ public sealed class CrimeEventsController : ControllerBase
 
     /// <summary>Assigns a person to this event under a specific role.</summary>
     [HttpPost("{id:guid}/persons")]
+    [Authorize(Policy = Policies.CanEdit)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -99,6 +105,7 @@ public sealed class CrimeEventsController : ControllerBase
     /// The role is part of the composite key on the join, so it is required.
     /// </summary>
     [HttpDelete("{id:guid}/persons/{personId:guid}")]
+    [Authorize(Policy = Policies.CanEdit)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UnassignPerson(
@@ -116,6 +123,7 @@ public sealed class CrimeEventsController : ControllerBase
     /// Self-links and duplicate links are rejected with 409 Conflict.
     /// </summary>
     [HttpPost("{id:guid}/links")]
+    [Authorize(Policy = Policies.CanEdit)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -130,6 +138,7 @@ public sealed class CrimeEventsController : ControllerBase
 
     /// <summary>Removes a directed link from this event to <paramref name="toEventId"/>.</summary>
     [HttpDelete("{id:guid}/links/{toEventId:guid}")]
+    [Authorize(Policy = Policies.CanEdit)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UnlinkEvent(
