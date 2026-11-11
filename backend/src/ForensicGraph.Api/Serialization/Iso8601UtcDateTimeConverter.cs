@@ -12,7 +12,9 @@ namespace ForensicGraph.Api.Serialization;
 /// </summary>
 internal sealed class Iso8601UtcDateTimeConverter : JsonConverter<DateTime>
 {
-    private const string Format = "yyyy-MM-ddTHH:mm:ss.fffZ";
+    // PostgreSQL stores microseconds; writing only milliseconds would round the
+    // stored value each time a client read a record and saved it back.
+    private const string Format = "yyyy-MM-ddTHH:mm:ss.FFFFFFFZ";
 
     public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
