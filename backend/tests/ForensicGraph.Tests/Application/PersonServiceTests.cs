@@ -86,6 +86,16 @@ public class PersonServiceTests
     }
 
     [Fact]
+    public async Task UpdateAsync_with_stale_version_throws_Conflict()
+    {
+        var (service, _, _) = BuildService();
+        var created = await service.CreateAsync(ValidWrite(), CancellationToken.None);
+
+        await Assert.ThrowsAsync<ConflictException>(() => service.UpdateAsync(
+            created.Id, ValidWrite() with { Version = created.Version + 1 }, CancellationToken.None));
+    }
+
+    [Fact]
     public async Task UpdateAsync_throws_NotFound_for_unknown_id()
     {
         var (service, _, _) = BuildService();

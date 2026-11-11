@@ -14,4 +14,7 @@ public sealed record CrimeEventWriteDto
     public int Severity { get; init; }
     public double? Latitude { get; init; }
     public double? Longitude { get; init; }
+
+    /// <summary>On update, the <c>Version</c> the client last read; a mismatch is rejected with 409. Ignored on create.</summary>
+    public uint? Version { get; init; }
 }

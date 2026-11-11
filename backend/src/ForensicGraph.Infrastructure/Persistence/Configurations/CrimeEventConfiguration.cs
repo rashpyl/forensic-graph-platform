@@ -16,6 +16,9 @@ internal sealed class CrimeEventConfiguration : IEntityTypeConfiguration<CrimeEv
             .HasColumnType("uuid")
             .ValueGeneratedNever();
 
+        // Maps to the PostgreSQL system column xmin (no physical column is added).
+        builder.Property(e => e.Version).IsRowVersion();
+
         builder.Property(e => e.Title)
             .HasColumnName("title")
             .HasColumnType("text")

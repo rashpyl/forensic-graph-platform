@@ -17,4 +17,6 @@ public sealed record CrimeEventDto
     public IReadOnlyList<EventLinkDto> Links { get; init; } = Array.Empty<EventLinkDto>();
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
+    /// <summary>Row version; send it back in the write payload when updating.</summary>
+    public uint Version { get; init; }
 }

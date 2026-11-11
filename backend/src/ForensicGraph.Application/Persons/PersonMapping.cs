@@ -21,6 +21,7 @@ public static class PersonMapping
             PhysicalDescription = entity.PhysicalDescription,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
+            Version = entity.Version,
         };
     }
 

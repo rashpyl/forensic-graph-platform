@@ -16,6 +16,9 @@ internal sealed class PersonConfiguration : IEntityTypeConfiguration<Person>
             .HasColumnType("uuid")
             .ValueGeneratedNever();
 
+        // Maps to the PostgreSQL system column xmin (no physical column is added).
+        builder.Property(p => p.Version).IsRowVersion();
+
         builder.Property(p => p.FirstName)
             .HasColumnName("first_name")
             .HasColumnType("text")

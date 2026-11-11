@@ -82,6 +82,31 @@ public class CrimeEventServiceTests
     }
 
     [Fact]
+    public async Task UpdateAsync_with_stale_version_throws_Conflict_and_keeps_data()
+    {
+        var (service, repo, _, _) = BuildService();
+        var created = await service.CreateAsync(ValidWrite(), CancellationToken.None);
+
+        var stale = ValidWrite() with { Title = "Overwritten", Version = created.Version + 1 };
+
+        await Assert.ThrowsAsync<ConflictException>(
+            () => service.UpdateAsync(created.Id, stale, CancellationToken.None));
+        Assert.NotEqual("Overwritten", repo.Store[created.Id].Title);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_with_current_version_succeeds()
+    {
+        var (service, _, _, _) = BuildService();
+        var created = await service.CreateAsync(ValidWrite(), CancellationToken.None);
+
+        var updated = await service.UpdateAsync(
+            created.Id, ValidWrite() with { Title = "Edited", Version = created.Version }, CancellationToken.None);
+
+        Assert.Equal("Edited", updated.Title);
+    }
+
+    [Fact]
     public async Task UpdateAsync_bumps_UpdatedAt_but_keeps_CreatedAt()
     {
         var (service, _, _, time) = BuildService();

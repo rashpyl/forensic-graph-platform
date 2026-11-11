@@ -93,6 +93,12 @@ public sealed class CrimeEventService
         var entity = await _repository.GetByIdAsync(id, cancellationToken)
             ?? throw new NotFoundException(nameof(CrimeEvent), id);
 
+        if (dto.Version is { } expected && expected != entity.Version)
+        {
+            throw new ConflictException(
+                "This event was changed by someone else after you opened it. Reload it and apply your changes again.");
+        }
+
         var nowUtc = _timeProvider.GetUtcNow().UtcDateTime;
         dto.ApplyTo(entity, nowUtc);
 

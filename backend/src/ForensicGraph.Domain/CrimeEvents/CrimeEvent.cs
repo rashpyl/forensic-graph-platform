@@ -26,6 +26,8 @@ public sealed class CrimeEvent
     public double? Longitude { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
+    /// <summary>PostgreSQL <c>xmin</c>: changes on every update and is used to detect concurrent edits.</summary>
+    public uint Version { get; private set; }
     public IReadOnlyList<EventPerson> Persons => _persons.AsReadOnly();
     public IReadOnlyList<EventLink> OutgoingLinks => _outgoingLinks.AsReadOnly();
 

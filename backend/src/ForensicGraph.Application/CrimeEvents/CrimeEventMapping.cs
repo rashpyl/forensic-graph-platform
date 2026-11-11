@@ -28,6 +28,7 @@ public static class CrimeEventMapping
             Longitude = entity.Longitude,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
+            Version = entity.Version,
         };
     }
 

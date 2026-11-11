@@ -24,6 +24,8 @@ public sealed class Person
     public List<string> PassportNumbers { get; private set; } = new();
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
+    /// <summary>PostgreSQL <c>xmin</c>: changes on every update and is used to detect concurrent edits.</summary>
+    public uint Version { get; private set; }
 
     private Person()
     {

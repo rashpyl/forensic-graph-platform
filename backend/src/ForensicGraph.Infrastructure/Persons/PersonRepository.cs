@@ -85,6 +85,6 @@ public sealed class PersonRepository : IPersonRepository
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
-        return _db.SaveChangesAsync(cancellationToken);
+        return _db.SaveChangesWithConflictDetectionAsync(cancellationToken);
     }
 }
