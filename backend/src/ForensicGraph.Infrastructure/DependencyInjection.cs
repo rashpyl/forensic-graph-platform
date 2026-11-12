@@ -1,8 +1,10 @@
+using ForensicGraph.Application.Auditing;
 using ForensicGraph.Application.CrimeEvents;
 using ForensicGraph.Application.Persons;
 using ForensicGraph.Application.Users;
-using ForensicGraph.Infrastructure.Identity;
+using ForensicGraph.Infrastructure.Auditing;
 using ForensicGraph.Infrastructure.CrimeEvents;
+using ForensicGraph.Infrastructure.Identity;
 using ForensicGraph.Infrastructure.Persistence;
 using ForensicGraph.Infrastructure.Persons;
 using Microsoft.EntityFrameworkCore;
@@ -31,14 +33,18 @@ public static class DependencyInjection
                 "Set it via user-secrets, environment variables, or appsettings.");
         }
 
-        services.AddDbContext<ForensicGraphDbContext>(options =>
-            options.UseNpgsql(connectionString, npgsql => npgsql.MigrationsAssembly(
-                typeof(ForensicGraphDbContext).Assembly.GetName().Name)));
+        services.AddScoped<AuditSaveChangesInterceptor>();
+        services.AddDbContext<ForensicGraphDbContext>((serviceProvider, options) =>
+            options
+                .UseNpgsql(connectionString, npgsql => npgsql.MigrationsAssembly(
+                    typeof(ForensicGraphDbContext).Assembly.GetName().Name))
+                .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
 
         services.AddScoped<ICrimeEventRepository, CrimeEventRepository>();
         services.AddScoped<IPersonRepository, PersonRepository>();
 
         services.AddScoped<IUserAdministrationService, UserAdministrationService>();
+        services.AddScoped<IAuditLogReader, AuditLogReader>();
 
         services.AddScoped<CrimeEventService>();
         services.AddScoped<PersonService>();
