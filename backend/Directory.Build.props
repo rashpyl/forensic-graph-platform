@@ -2,7 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
+    <!-- Pinned: C# 14 (default on the .NET 10 SDK) changes overload resolution for
+         array.Contains(...) to span overloads that EF Core 9 cannot translate. -->
+    <LangVersion>13.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>

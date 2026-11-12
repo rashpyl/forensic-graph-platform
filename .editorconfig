@@ -36,3 +36,7 @@ dotnet_naming_style.end_in_async.capitalization = pascal_case
 
 # Reduce noise from a few analyzers that fire on scaffolded stubs
 dotnet_diagnostic.CA1515.severity = none  # Types can be non-internal
+
+# EF Core migrations are generated code; style rules do not apply.
+[**/Migrations/*.cs]
+generated_code = true
