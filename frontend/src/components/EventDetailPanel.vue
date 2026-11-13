@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 
 import { useEventsStore } from '@/stores/events'
 import { usePersonsStore } from '@/stores/persons'
+import { useAuthStore } from '@/stores/auth'
 import { formatApiError } from '@/services/apiError'
 import { formatDateTimeEU } from '@/composables/useDateTime'
 import { colorForSeverity, labelForSeverity } from '@/composables/useSeverity'
@@ -22,6 +23,7 @@ import type { EventRole, PersonDto } from '@/types/api'
 
 const eventsStore = useEventsStore()
 const personsStore = usePersonsStore()
+const { canEdit } = storeToRefs(useAuthStore())
 const { selected, events } = storeToRefs(eventsStore)
 
 const ROLES: EventRole[] = [
@@ -221,12 +223,12 @@ function close() {
           <li v-for="p in selected.persons" :key="`${p.personId}-${p.role}`" class="person-row">
             <span class="person-name">{{ p.firstName }} {{ p.lastName }}</span>
             <span class="role-badge" :data-role="p.role">{{ p.role }}</span>
-            <button class="icon-btn small" @click="removePerson(p.personId, p.role)" aria-label="Remove">✕</button>
+            <button v-if="canEdit" class="icon-btn small" @click="removePerson(p.personId, p.role)" aria-label="Remove">✕</button>
           </li>
         </ul>
         <p v-else class="empty">No persons assigned yet.</p>
 
-        <div class="add-row">
+        <div v-if="canEdit" class="add-row">
           <div class="autocomplete">
             <input
               v-model="personQuery"
@@ -276,6 +278,7 @@ function close() {
               <span v-if="l.note" class="link-note">{{ l.note }}</span>
             </div>
             <button
+              v-if="canEdit"
               class="icon-btn small"
               @click="unlink(l.fromEventId, l.toEventId)"
               aria-label="Unlink"
@@ -284,7 +287,7 @@ function close() {
         </ul>
         <p v-else class="empty">No linked events.</p>
 
-        <div class="add-row column">
+        <div v-if="canEdit" class="add-row column">
           <select v-model="linkTargetId" class="full-width">
             <option value="" disabled>Pick an event to link…</option>
             <option v-for="e in linkCandidates" :key="e.id" :value="e.id">{{ e.title }}</option>
@@ -307,7 +310,7 @@ function close() {
       </section>
 
       <!-- Danger zone -->
-      <section class="panel-section danger-zone">
+      <section v-if="canEdit" class="panel-section danger-zone">
         <h3 class="section-title danger">Danger zone</h3>
         <button class="btn danger" @click="deleteEvent">Delete event</button>
         <div v-if="deleteError" class="form-error small">{{ deleteError }}</div>

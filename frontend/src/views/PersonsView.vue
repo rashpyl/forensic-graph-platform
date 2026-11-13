@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import { usePersonsStore } from '@/stores/persons'
+import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { formatApiError } from '@/services/apiError'
 import type { PersonDto } from '@/types/api'
@@ -15,6 +16,7 @@ import type { PersonDto } from '@/types/api'
 
 const personsStore = usePersonsStore()
 const uiStore = useUiStore()
+const { canEdit } = storeToRefs(useAuthStore())
 const { persons, isLoading, error } = storeToRefs(personsStore)
 
 const query = ref('')
@@ -60,7 +62,7 @@ async function remove(p: PersonDto) {
   <div class="persons-view">
     <header class="page-header">
       <h1>Persons</h1>
-      <button class="btn primary" @click="uiStore.openNewPersonDialog()">
+      <button v-if="canEdit" class="btn primary" @click="uiStore.openNewPersonDialog()">
         <span class="btn-icon">＋</span> New Person
       </button>
     </header>
@@ -90,7 +92,7 @@ async function remove(p: PersonDto) {
             <th>Citizenships</th>
             <th>Passports</th>
             <th>Phone</th>
-            <th class="actions-col">Actions</th>
+            <th v-if="canEdit" class="actions-col">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -108,12 +110,12 @@ async function remove(p: PersonDto) {
               <span v-if="!p.passportNumbers.length" class="empty">—</span>
             </td>
             <td class="mono">{{ p.phone || '—' }}</td>
-            <td class="actions-col">
+            <td v-if="canEdit" class="actions-col">
               <button class="icon-btn danger" @click="remove(p)" title="Delete person">✕</button>
             </td>
           </tr>
           <tr v-if="!filtered.length">
-            <td colspan="5" class="empty-row">No persons match the current filter.</td>
+            <td :colspan="canEdit ? 5 : 4" class="empty-row">No persons match the current filter.</td>
           </tr>
         </tbody>
       </table>

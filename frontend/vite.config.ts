@@ -10,6 +10,17 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
+  server: {
+    // Same-origin in development: the browser talks only to Vite, which forwards
+    // /api to the backend. This mirrors a production reverse proxy and keeps the
+    // session cookie first-party.
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: false,
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

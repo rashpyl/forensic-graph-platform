@@ -41,6 +41,8 @@ export interface CrimeEventDto {
   links: EventLinkDto[]
   createdAt: string
   updatedAt: string
+  /** Row version; send it back when updating so concurrent edits are detected. */
+  version: number
 }
 
 export interface CrimeEventWriteDto {
@@ -51,6 +53,7 @@ export interface CrimeEventWriteDto {
   severity: number
   latitude?: number | null
   longitude?: number | null
+  version?: number
 }
 
 export interface PersonDto {
@@ -63,6 +66,7 @@ export interface PersonDto {
   physicalDescription?: string | null
   createdAt: string
   updatedAt: string
+  version: number
 }
 
 export interface PersonWriteDto {
@@ -72,6 +76,7 @@ export interface PersonWriteDto {
   passportNumbers: string[]
   phone?: string | null
   physicalDescription?: string | null
+  version?: number
 }
 
 export interface PagedResult<T> {
@@ -94,4 +99,47 @@ export interface PersonListQuery {
   page?: number
   pageSize?: number
   q?: string
+}
+
+export type UserRole = 'Admin' | 'Analyst' | 'Viewer'
+
+export const USER_ROLES: UserRole[] = ['Admin', 'Analyst', 'Viewer']
+
+export interface CurrentUserDto {
+  id: string
+  email: string
+  displayName: string
+  role: UserRole
+}
+
+export interface UserDto extends CurrentUserDto {
+  isLocked: boolean
+  createdAt: string
+}
+
+export interface CreateUserRequest {
+  email: string
+  displayName: string
+  role: UserRole
+  password: string
+}
+
+export interface AuditEntryDto {
+  id: number
+  occurredAt: string
+  userId?: string | null
+  userName: string
+  action: 'Created' | 'Updated' | 'Deleted'
+  entityType: string
+  entityId: string
+  /** JSON object: property -> { old, new } */
+  changes: string
+}
+
+export interface AuditQuery {
+  entityType?: string
+  entityId?: string
+  userId?: string
+  page?: number
+  pageSize?: number
 }

@@ -1,13 +1,9 @@
 import axios from 'axios'
 
 /**
- * Extracts a human-readable message from an axios error whose body follows
- * ASP.NET Core's RFC 7807 ProblemDetails shape:
- *   { title, detail, errors?: { field: string[] } }
- * FluentValidation surfaces field-level messages under <c>errors</c>; the
- * rest of the API (NotFoundException, ConflictException, 500s) uses
- * <c>title</c> + <c>detail</c>. We flatten everything into a single string
- * suitable for an inline error banner.
+ * Turns an axios error into a single message for an inline error banner.
+ * The API returns ProblemDetails: `{ title, detail, errors? }`, where `errors`
+ * is either a map of field to messages (validation) or a plain list (password policy).
  */
 export function formatApiError(err: unknown): string {
   if (!axios.isAxiosError(err)) {
@@ -15,10 +11,14 @@ export function formatApiError(err: unknown): string {
   }
 
   const data = err.response?.data as
-    | { title?: string; detail?: string; errors?: Record<string, string[]> }
+    | { title?: string; detail?: string; errors?: Record<string, string[]> | string[] }
     | undefined
 
-  if (data?.errors) {
+  if (Array.isArray(data?.errors) && data.errors.length > 0) {
+    return data.errors.join('\n')
+  }
+
+  if (data?.errors && !Array.isArray(data.errors)) {
     const parts: string[] = []
     for (const [field, msgs] of Object.entries(data.errors)) {
       for (const msg of msgs) {

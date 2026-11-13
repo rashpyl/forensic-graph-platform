@@ -1,14 +1,35 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onBeforeUnmount } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui'
+import { useAuthStore } from '@/stores/auth'
+import { onUnauthorized } from '@/services/apiClient'
 import NewPersonDialog from '@/components/NewPersonDialog.vue'
 import AboutModal from '@/components/AboutModal.vue'
 
 const uiStore = useUiStore()
+const authStore = useAuthStore()
+const { user, isAuthenticated, canEdit } = storeToRefs(authStore)
 const route = useRoute()
+const router = useRouter()
 
 const isMapRoute = computed(() => route.name === 'map')
+const showChrome = computed(() => isAuthenticated.value && !route.meta.public)
+
+// Any 401 from the API (session expired, account deactivated) returns to login.
+const stopListening = onUnauthorized(() => {
+  authStore.sessionExpired()
+  if (!route.meta.public) {
+    void router.replace({ name: 'login', query: { redirect: route.fullPath } })
+  }
+})
+onBeforeUnmount(stopListening)
+
+async function signOut() {
+  await authStore.logout()
+  await router.replace({ name: 'login' })
+}
 
 function startNewEvent() {
   uiStore.startPickingLocation()
@@ -17,7 +38,7 @@ function startNewEvent() {
 
 <template>
   <div id="app-layout">
-    <header class="topbar">
+    <header v-if="showChrome" class="topbar">
       <span class="topbar-title">🔍 Forensic Graph Platform</span>
       <nav class="topbar-links">
         <RouterLink to="/" class="nav-link" :class="{ active: isMapRoute }">Map</RouterLink>
@@ -25,6 +46,7 @@ function startNewEvent() {
       </nav>
       <nav class="topbar-actions">
         <button
+          v-if="canEdit"
           class="nav-btn"
           :disabled="!isMapRoute"
           :title="isMapRoute ? 'Pick a spot on the map' : 'Switch to the map to place a new event'"
@@ -32,12 +54,17 @@ function startNewEvent() {
         >
           <span class="nav-icon">＋</span> New Event
         </button>
-        <button class="nav-btn" @click="uiStore.openNewPersonDialog()">
+        <button v-if="canEdit" class="nav-btn" @click="uiStore.openNewPersonDialog()">
           <span class="nav-icon">👤</span> New Person
         </button>
         <button class="nav-btn" @click="uiStore.openAboutModal()">
           <span class="nav-icon">ℹ</span> About
         </button>
+        <div v-if="user" class="user-chip" :title="user.email">
+          <span class="user-name">{{ user.displayName }}</span>
+          <span class="role-pill" :data-role="user.role">{{ user.role }}</span>
+          <button class="nav-btn subtle" @click="signOut">Sign out</button>
+        </div>
       </nav>
     </header>
     <main class="main-content">
@@ -133,6 +160,37 @@ body {
 .nav-icon {
   font-size: 0.95rem;
   line-height: 1;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 12px;
+  margin-left: 4px;
+  border-left: 1px solid #2d3148;
+}
+
+.user-name {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.role-pill {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+}
+
+.role-pill[data-role='Admin'] { background: #3b0764; color: #e9d5ff; border-color: #6b21a8; }
+.role-pill[data-role='Analyst'] { background: #172554; color: #bfdbfe; border-color: #1e40af; }
+.role-pill[data-role='Viewer'] { background: #1f2937; color: #d1d5db; border-color: #4b5563; }
+
+.nav-btn.subtle {
+  background: transparent;
 }
 
 .main-content {
