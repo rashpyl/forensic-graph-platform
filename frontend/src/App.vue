@@ -10,7 +10,7 @@ import AboutModal from '@/components/AboutModal.vue'
 
 const uiStore = useUiStore()
 const authStore = useAuthStore()
-const { user, isAuthenticated, canEdit } = storeToRefs(authStore)
+const { user, isAuthenticated, canEdit, isAdmin } = storeToRefs(authStore)
 const route = useRoute()
 const router = useRouter()
 
@@ -43,6 +43,8 @@ function startNewEvent() {
       <nav class="topbar-links">
         <RouterLink to="/" class="nav-link" :class="{ active: isMapRoute }">Map</RouterLink>
         <RouterLink to="/persons" class="nav-link" active-class="active">Persons</RouterLink>
+        <RouterLink v-if="isAdmin" to="/admin/users" class="nav-link" active-class="active">Users</RouterLink>
+        <RouterLink v-if="isAdmin" to="/admin/audit" class="nav-link" active-class="active">Audit log</RouterLink>
       </nav>
       <nav class="topbar-actions">
         <button
