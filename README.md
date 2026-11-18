@@ -111,6 +111,17 @@ cd backend
 dotnet test
 ```
 
+The security integration tests (sign-in, roles, CSRF, masking, edit conflicts, audit log) start
+the real API against a temporary PostgreSQL database. They are skipped unless
+`FG_TEST_POSTGRES` points at a server where the user may create databases, for example the
+docker-compose container:
+
+```bash
+FG_TEST_POSTGRES="Host=localhost;Port=5433;Username=forensic;Password=forensic" dotnet test
+```
+
+Each run creates its own `fg_test_…` database and drops it afterwards.
+
 Frontend has a type-checked production build:
 
 ```bash
