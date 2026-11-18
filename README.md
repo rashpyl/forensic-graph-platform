@@ -60,7 +60,22 @@ The API listens on **http://localhost:8080**. On first start in Development mode
 Prague, Kyiv, Lviv and Berlin. Restarting the API is a no-op — the seeder short-circuits
 when the `crime_events` table is non-empty.
 
-Swagger UI: <http://localhost:8080/swagger>
+It also creates one demo account per role, all with the password from
+`Seed:DemoPassword` in `appsettings.Development.json` (`forensic-demo-2026`):
+
+| E-mail | Role | Can |
+|---|---|---|
+| `admin@forensic.local` | Admin | everything, plus user management and the audit log |
+| `analyst@forensic.local` | Analyst | create, edit and delete data; sees passport numbers and phones |
+| `viewer@forensic.local` | Viewer | read only; passport numbers and phones are masked |
+
+These accounts exist only in Development. Outside it, create the first administrator by
+setting `Bootstrap:AdminEmail` and `Bootstrap:AdminPassword` (user-secrets or environment
+variables) before the first start; further accounts are created in the app under **Users**.
+
+Every endpoint except `/healthz`, `/api/auth/login` and `/api/auth/csrf` requires a signed-in
+user. Swagger UI (<http://localhost:8080/swagger>) therefore shows the API, but calling it
+needs a session cookie and an antiforgery token — the app is the easier way to try it.
 
 ### 4. Run the frontend
 
@@ -70,17 +85,24 @@ npm install
 npm run dev
 ```
 
-The Vite dev server serves the app at **http://localhost:5173**. The API base URL is
-read from `frontend/.env.development` (`VITE_API_BASE_URL=http://localhost:8080`). CORS
-on the backend allows only that origin, so open the app at `localhost` (not `127.0.0.1`).
+The Vite dev server serves the app at **http://localhost:5173** and forwards `/api` to the
+backend on port 8080 (see `vite.config.ts`), so the browser talks to a single origin and the
+session cookie stays first-party. Sign in with one of the demo accounts above.
 
 ### 5. What to click
+- Sign in. Analyst or Admin to change data, Viewer to see the read-only experience.
 - Map opens at `/`. Zoom / pan to see clustered severity-coloured markers.
 - **+ New Event** → click a spot on the map → fill the dialog.
 - Click any marker to open the right-side detail panel (assign persons, link related events, delete).
 - **Persons** in the navbar opens the searchable person catalogue.
 - **New Person** opens the create-person dialog from anywhere.
 - **About** shows a short summary of the project.
+- As Admin: **Users** manages accounts and roles, **Audit log** shows who changed what and when.
+
+### Documentation
+- [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) — using the application.
+- [`docs/DEVELOPER_GUIDE.md`](docs/DEVELOPER_GUIDE.md) — architecture, conventions and the
+  security model (section 3.6).
 
 ### Tests
 

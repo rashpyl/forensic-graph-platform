@@ -138,7 +138,35 @@ dotnet user-secrets set "ConnectionStrings:Postgres" "Host=…"
 `AddForensicGraphCors` allows exactly one origin: `http://localhost:5173`.
 This is deliberate — for MVP we don't need multiple origins and refusing
 `127.0.0.1` catches the class of bugs where developers mix the two
-hostnames and get confusing preflight failures.
+hostnames and get confusing preflight failures. Credentials are allowed
+(`AllowCredentials`) because the session travels in a cookie.
+
+### 3.6 Security
+- **Sign-in:** ASP.NET Core Identity; passwords stored as salted PBKDF2
+  hashes, minimum 12 characters. Lockout for 15 minutes after 5 failed
+  attempts, plus at most 5 login attempts per minute per IP. An unknown
+  e-mail, a wrong password and a locked account return the same error, so
+  the login form cannot be used to discover accounts.
+- **Session:** `HttpOnly`, `SameSite=Strict` cookie (`Secure` outside
+  Development), so page scripts cannot read it. Deactivation or a role
+  change reaches open sessions within a minute.
+- **CSRF:** every POST/PUT/PATCH/DELETE must carry an antiforgery token in
+  `X-XSRF-TOKEN`, obtained from `GET /api/auth/csrf`.
+- **Authorization:** login is required by default on every endpoint
+  except `/healthz`, `/api/auth/login` and `/api/auth/csrf`. Writes need
+  Analyst or Admin; user management and the audit log need Admin. The UI
+  hides what a role cannot do, but the API enforces it.
+- **Sensitive fields:** passport numbers and phones are masked for Viewers
+  and in the audit log.
+- **Audit log:** every change to events, persons, assignments, links and
+  accounts is recorded with user, time and old/new values, in the same
+  transaction as the change. A database trigger rejects UPDATE, DELETE
+  and TRUNCATE on the log.
+- **Concurrent edits:** events and persons carry a row version
+  (PostgreSQL `xmin`). Saving over someone else's newer change returns
+  409 Conflict instead of silently overwriting it.
+- **Headers:** `nosniff`, `X-Frame-Options: DENY`, a deny-all CSP for API
+  responses, `no-referrer`; HSTS and HTTPS redirection outside Development.
 
 ---
 
@@ -172,10 +200,15 @@ persons and links stay accurate without prop-drilling.
   same composable. Never `.toISOString()` a naïve string.
 - Severity 1–5 maps to a fixed green→red palette in `useSeverity`.
 
-### 4.4 API base URL
-`services/apiClient.ts` reads `import.meta.env.VITE_API_BASE_URL`,
-sourced from `.env.development`. The build fails loudly if the variable
-is missing.
+### 4.4 API base URL and authentication
+In development the Vite dev server forwards `/api` to the backend on
+port 8080 (`vite.config.ts`), so `VITE_API_BASE_URL` in `.env.development`
+is empty and requests go to the same origin. Set it to a full URL only if
+the API is served elsewhere.
+
+`services/apiClient.ts` sends the session cookie and adds the CSRF token to
+every state-changing request. A 401 response signs the user out and returns
+to the login page. Role checks in the UI come from `stores/auth.ts`.
 
 ---
 
