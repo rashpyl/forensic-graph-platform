@@ -1,4 +1,5 @@
 using ForensicGraph.Domain.CrimeEvents;
+using ForensicGraph.Domain.Persons;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -38,5 +39,10 @@ internal sealed class EventPersonConfiguration : IEntityTypeConfiguration<EventP
 
         builder.HasIndex(ep => ep.CrimeEventId)
             .HasDatabaseName("ix_event_persons_crime_event_id");
+
+        builder.HasOne<Person>()
+            .WithMany()
+            .HasForeignKey(ep => ep.PersonId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

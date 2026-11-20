@@ -74,7 +74,7 @@ public sealed class CrimeEventsController : ControllerBase
         return _service.UpdateAsync(id, body, cancellationToken);
     }
 
-    /// <summary>Deletes a crime event. Assignments and outgoing links are removed by cascade.</summary>
+    /// <summary>Deletes a crime event. Assignments and both incoming and outgoing links are removed by cascade.</summary>
     [HttpDelete("{id:guid}")]
     [Authorize(Policy = Policies.CanEdit)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

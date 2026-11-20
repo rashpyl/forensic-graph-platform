@@ -466,6 +466,12 @@ namespace ForensicGraph.Infrastructure.Persistence.Migrations
                         .HasForeignKey("FromEventId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("ForensicGraph.Domain.CrimeEvents.CrimeEvent", null)
+                        .WithMany()
+                        .HasForeignKey("ToEventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ForensicGraph.Domain.CrimeEvents.EventPerson", b =>
@@ -473,6 +479,12 @@ namespace ForensicGraph.Infrastructure.Persistence.Migrations
                     b.HasOne("ForensicGraph.Domain.CrimeEvents.CrimeEvent", null)
                         .WithMany("Persons")
                         .HasForeignKey("CrimeEventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ForensicGraph.Domain.Persons.Person", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

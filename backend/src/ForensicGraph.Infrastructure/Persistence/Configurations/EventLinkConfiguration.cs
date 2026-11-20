@@ -36,5 +36,11 @@ internal sealed class EventLinkConfiguration : IEntityTypeConfiguration<EventLin
 
         builder.HasIndex(l => l.ToEventId)
             .HasDatabaseName("ix_event_links_to_event_id");
+
+        // The from-side FK is declared on CrimeEvent.OutgoingLinks; this is the incoming side.
+        builder.HasOne<CrimeEvent>()
+            .WithMany()
+            .HasForeignKey(l => l.ToEventId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
