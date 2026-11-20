@@ -157,6 +157,44 @@ public sealed class SecurityIntegrationTests : IClassFixture<SecurityIntegration
     }
 
     [SkippableFact]
+    public async Task Deleting_person_audits_each_removed_assignment()
+    {
+        Skip.IfNot(SecurityApiFactory.IsConfigured, "FG_TEST_POSTGRES not set");
+        var person = await CreatePersonAsync(null, null);
+        var first = await CreateEventAsync();
+        var second = await CreateEventAsync();
+        await AssignAsync(first, person.Id, "Suspect");
+        await AssignAsync(second, person.Id, "Witness");
+
+        var delete = await _s.Analyst.DeleteAsync($"/api/persons/{person.Id}");
+        var deleted = await DeletedEntriesAsync(person.Id);
+
+        Assert.Equal(HttpStatusCode.NoContent, delete.StatusCode);
+        Assert.Equal(new[] { "EventPerson", "EventPerson", "Person" }, deleted.OrderBy(t => t).ToArray());
+    }
+
+    [SkippableFact]
+    public async Task Deleting_event_audits_assignments_and_both_link_directions()
+    {
+        Skip.IfNot(SecurityApiFactory.IsConfigured, "FG_TEST_POSTGRES not set");
+        var person = await CreatePersonAsync(null, null);
+        var target = await CreateEventAsync();
+        var outgoingTarget = await CreateEventAsync();
+        var incomingSource = await CreateEventAsync();
+        await AssignAsync(target, person.Id, "Victim");
+        await LinkAsync(target, outgoingTarget);
+        await LinkAsync(incomingSource, target);
+
+        var delete = await _s.Analyst.DeleteAsync($"/api/events/{target}");
+        var deleted = await DeletedEntriesAsync(target);
+
+        Assert.Equal(HttpStatusCode.NoContent, delete.StatusCode);
+        Assert.Equal(
+            new[] { "CrimeEvent", "EventLink", "EventLink", "EventPerson" },
+            deleted.OrderBy(t => t).ToArray());
+    }
+
+    [SkippableFact]
     public async Task Admin_cannot_lock_themselves_out()
     {
         Skip.IfNot(SecurityApiFactory.IsConfigured, "FG_TEST_POSTGRES not set");
@@ -183,6 +221,35 @@ public sealed class SecurityIntegrationTests : IClassFixture<SecurityIntegration
         response.EnsureSuccessStatusCode();
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
         return (body.GetProperty("id").GetGuid(), body.GetProperty("version").GetUInt32());
+    }
+
+    private async Task<Guid> CreateEventAsync()
+    {
+        var response = await _s.Analyst.PostAsync("/api/events", new
+        {
+            title = "Audit test event",
+            occurredAt = DateTime.UtcNow.AddDays(-1),
+            severity = 2,
+        });
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+    }
+
+    private async Task AssignAsync(Guid eventId, Guid personId, string role) =>
+        (await _s.Analyst.PostAsync($"/api/events/{eventId}/persons", new { personId, role }))
+            .EnsureSuccessStatusCode();
+
+    private async Task LinkAsync(Guid fromEventId, Guid toEventId) =>
+        (await _s.Analyst.PostAsync($"/api/events/{fromEventId}/links", new { toEventId }))
+            .EnsureSuccessStatusCode();
+
+    private async Task<List<string>> DeletedEntriesAsync(Guid entityId)
+    {
+        var page = await _s.Admin.Http.GetFromJsonAsync<JsonElement>($"/api/audit?entityId={entityId}&pageSize=200");
+        return page.GetProperty("items").EnumerateArray()
+            .Where(e => e.GetProperty("action").GetString() == "Deleted")
+            .Select(e => e.GetProperty("entityType").GetString()!)
+            .ToList();
     }
 
     private static object PersonBody(string firstName, uint version) => new

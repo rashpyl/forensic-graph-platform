@@ -24,8 +24,9 @@ namespace ForensicGraph.Infrastructure.Auditing;
 ///   <item>For users only email, display name and deactivation are recorded; password
 ///         hashes, security stamps and lockout counters never reach the log.</item>
 /// </list>
-/// Limitation: rows removed by a database-level cascade (e.g. the person assignments of
-/// a deleted event) are logged only if they were loaded; the parent's delete is always logged.
+/// Rows removed by a database-level cascade are logged only if they were loaded. The
+/// repositories load and remove dependent rows explicitly on delete, so the cascade is
+/// only a safety net for deletes made outside the application.
 /// </summary>
 public sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
 {

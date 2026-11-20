@@ -103,10 +103,20 @@ public sealed class CrimeEventRepository : ICrimeEventRepository
         return Task.CompletedTask;
     }
 
-    public Task RemoveAsync(CrimeEvent entity, CancellationToken cancellationToken)
+    public async Task RemoveAsync(CrimeEvent entity, CancellationToken cancellationToken)
     {
+        // Dependent rows are loaded tracked and removed explicitly so the audit interceptor
+        // records each of them in the same SaveChanges. The database cascade is a safety net.
+        var assignments = await _db.EventPersons
+            .Where(ep => ep.CrimeEventId == entity.Id)
+            .ToListAsync(cancellationToken);
+        var links = await _db.EventLinks
+            .Where(l => l.FromEventId == entity.Id || l.ToEventId == entity.Id)
+            .ToListAsync(cancellationToken);
+
+        _db.EventPersons.RemoveRange(assignments);
+        _db.EventLinks.RemoveRange(links);
         _db.CrimeEvents.Remove(entity);
-        return Task.CompletedTask;
     }
 
     public Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken)

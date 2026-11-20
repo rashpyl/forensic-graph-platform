@@ -77,10 +77,15 @@ public sealed class PersonRepository : IPersonRepository
         return Task.CompletedTask;
     }
 
-    public Task RemoveAsync(Person entity, CancellationToken cancellationToken)
+    public async Task RemoveAsync(Person entity, CancellationToken cancellationToken)
     {
+        // See CrimeEventRepository.RemoveAsync: tracked removal keeps the audit log complete.
+        var assignments = await _db.EventPersons
+            .Where(ep => ep.PersonId == entity.Id)
+            .ToListAsync(cancellationToken);
+
+        _db.EventPersons.RemoveRange(assignments);
         _db.Persons.Remove(entity);
-        return Task.CompletedTask;
     }
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
