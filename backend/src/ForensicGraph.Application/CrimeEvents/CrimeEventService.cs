@@ -40,6 +40,8 @@ public sealed class CrimeEventService
 
     public async Task<CrimeEventDto> GetAsync(Guid id, CancellationToken cancellationToken)
     {
+        // Persons and outgoing links come with the event; incoming links need a separate
+        // query because they are found through ToEventId.
         var entity = await _repository.GetByIdWithDetailsAsync(id, cancellationToken)
             ?? throw new NotFoundException(nameof(CrimeEvent), id);
 
@@ -57,6 +59,7 @@ public sealed class CrimeEventService
             : await _personRepository.GetManyAsync(personIds, cancellationToken);
         var personLookup = persons.ToDictionary(p => p.Id);
 
+        // Titles of all related events in a single query, for the link list.
         IReadOnlyDictionary<Guid, string> titleLookup = relatedEventIds.Length == 0
             ? new Dictionary<Guid, string>()
             : await _repository.GetTitlesAsync(relatedEventIds, cancellationToken);
