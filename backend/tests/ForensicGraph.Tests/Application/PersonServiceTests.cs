@@ -15,7 +15,7 @@ public class PersonServiceTests
         LastName = "Nováková",
         Citizenships = new[] { "CZ" },
         PassportNumbers = new[] { "P123" },
-        Phone = "+420111222333",
+        Phones = new[] { "+420111222333" },
         PhysicalDescription = "Tall, brown hair.",
     };
 
@@ -138,7 +138,7 @@ public class PersonServiceTests
         var fetched = await viewerService.GetAsync(created.Id, CancellationToken.None);
 
         Assert.Equal(new[] { "AB•••••12" }, fetched.PassportNumbers);
-        Assert.Equal("+4•••••••••33", fetched.Phone);
+        Assert.Equal(new[] { "+4•••••••••33" }, fetched.Phones);
         Assert.Equal("Anna", fetched.FirstName);
     }
 
@@ -147,12 +147,12 @@ public class PersonServiceTests
     {
         var (analystService, repo, time) = BuildService();
         var created = await analystService.CreateAsync(
-            ValidWrite() with { Phone = "+420111222333, +421999888777" }, CancellationToken.None);
+            ValidWrite() with { Phones = new[] { "+420111222333", "+421999888777" } }, CancellationToken.None);
         var viewerService = new PersonService(repo, time, FakeCurrentUser.Viewer());
 
         var fetched = await viewerService.GetAsync(created.Id, CancellationToken.None);
 
-        Assert.Equal("+4•••••••••33, +4•••••••••77", fetched.Phone);
+        Assert.Equal(new[] { "+4•••••••••33", "+4•••••••••77" }, fetched.Phones);
     }
 
     [Fact]
@@ -164,7 +164,7 @@ public class PersonServiceTests
         var fetched = await service.GetAsync(created.Id, CancellationToken.None);
 
         Assert.Equal(new[] { "P123" }, fetched.PassportNumbers);
-        Assert.Equal("+420111222333", fetched.Phone);
+        Assert.Equal(new[] { "+420111222333" }, fetched.Phones);
     }
 
     [Fact]

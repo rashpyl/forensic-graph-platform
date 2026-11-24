@@ -10,7 +10,7 @@ public sealed record PersonDto
     public string LastName { get; init; } = string.Empty;
     public IReadOnlyList<string> Citizenships { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> PassportNumbers { get; init; } = Array.Empty<string>();
-    public string? Phone { get; init; }
+    public IReadOnlyList<string> Phones { get; init; } = Array.Empty<string>();
     public string? PhysicalDescription { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }

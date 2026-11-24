@@ -21,7 +21,7 @@ public sealed record AuditEntryDto
 
     /// <summary>
     /// JSON object mapping each changed property to <c>{ "old": …, "new": … }</c>.
-    /// Sensitive values (passport numbers, phone) are stored masked.
+    /// Sensitive values (passport numbers, phones) are stored masked.
     /// </summary>
     public string Changes { get; init; } = "{}";
 }

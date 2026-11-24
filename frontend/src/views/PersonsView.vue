@@ -31,7 +31,7 @@ const filtered = computed<PersonDto[]>(() => {
       full.includes(q) ||
       p.citizenships.some((c) => c.toLowerCase().includes(q)) ||
       p.passportNumbers.some((n) => n.toLowerCase().includes(q)) ||
-      (p.phone?.toLowerCase().includes(q) ?? false)
+      p.phones.some((n) => n.toLowerCase().includes(q))
     )
   })
 })
@@ -91,7 +91,7 @@ async function remove(p: PersonDto) {
             <th>Name</th>
             <th>Citizenships</th>
             <th>Passports</th>
-            <th>Phone</th>
+            <th>Phones</th>
             <th v-if="canEdit" class="actions-col">Actions</th>
           </tr>
         </thead>
@@ -109,7 +109,10 @@ async function remove(p: PersonDto) {
               <span v-for="n in p.passportNumbers" :key="n" class="chip mono">{{ n }}</span>
               <span v-if="!p.passportNumbers.length" class="empty">—</span>
             </td>
-            <td class="mono">{{ p.phone || '—' }}</td>
+            <td>
+              <span v-for="n in p.phones" :key="n" class="chip mono">{{ n }}</span>
+              <span v-if="!p.phones.length" class="empty">—</span>
+            </td>
             <td v-if="canEdit" class="actions-col">
               <button class="icon-btn danger" @click="remove(p)" title="Delete person">✕</button>
             </td>

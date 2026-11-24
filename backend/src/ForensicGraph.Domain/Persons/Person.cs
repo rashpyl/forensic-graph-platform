@@ -10,7 +10,8 @@ namespace ForensicGraph.Domain.Persons;
 public sealed class Person
 {
     public const int NameMaxLength = 100;
-    public const int PhoneMaxLength = 200;
+    public const int PhoneMaxLength = 40;
+    public const int MaxPhones = 10;
     public const int PhysicalDescriptionMaxLength = 2000;
     public const int CitizenshipMaxLength = 60;
     public const int PassportMaxLength = 40;
@@ -18,10 +19,10 @@ public sealed class Person
     public Guid Id { get; private set; }
     public string FirstName { get; private set; } = string.Empty;
     public string LastName { get; private set; } = string.Empty;
-    public string? Phone { get; private set; }
     public string? PhysicalDescription { get; private set; }
     public List<string> Citizenships { get; private set; } = new();
     public List<string> PassportNumbers { get; private set; } = new();
+    public List<string> Phones { get; private set; } = new();
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
     /// <summary>PostgreSQL <c>xmin</c>: changes on every update and is used to detect concurrent edits.</summary>
@@ -37,13 +38,12 @@ public sealed class Person
         string lastName,
         IEnumerable<string>? citizenships,
         IEnumerable<string>? passportNumbers,
-        string? phone,
+        IEnumerable<string>? phones,
         string? physicalDescription,
         DateTime nowUtc)
     {
         GuardName(firstName, nameof(firstName));
         GuardName(lastName, nameof(lastName));
-        GuardPhone(phone);
         GuardPhysicalDescription(physicalDescription);
         var createdUtc = EnsureUtc(nowUtc, nameof(nowUtc));
 
@@ -52,12 +52,12 @@ public sealed class Person
             Id = id,
             FirstName = firstName.Trim(),
             LastName = lastName.Trim(),
-            Phone = NormalizePhone(phone),
             PhysicalDescription = string.IsNullOrWhiteSpace(physicalDescription)
                 ? null
                 : physicalDescription.Trim(),
             Citizenships = NormalizeStringList(citizenships, CitizenshipMaxLength, nameof(citizenships)),
             PassportNumbers = NormalizeStringList(passportNumbers, PassportMaxLength, nameof(passportNumbers)),
+            Phones = NormalizePhones(phones),
             CreatedAt = createdUtc,
             UpdatedAt = createdUtc,
         };
@@ -68,23 +68,22 @@ public sealed class Person
         string lastName,
         IEnumerable<string>? citizenships,
         IEnumerable<string>? passportNumbers,
-        string? phone,
+        IEnumerable<string>? phones,
         string? physicalDescription,
         DateTime nowUtc)
     {
         GuardName(firstName, nameof(firstName));
         GuardName(lastName, nameof(lastName));
-        GuardPhone(phone);
         GuardPhysicalDescription(physicalDescription);
 
         FirstName = firstName.Trim();
         LastName = lastName.Trim();
-        Phone = NormalizePhone(phone);
         PhysicalDescription = string.IsNullOrWhiteSpace(physicalDescription)
             ? null
             : physicalDescription.Trim();
         Citizenships = NormalizeStringList(citizenships, CitizenshipMaxLength, nameof(citizenships));
         PassportNumbers = NormalizeStringList(passportNumbers, PassportMaxLength, nameof(passportNumbers));
+        Phones = NormalizePhones(phones);
         UpdatedAt = EnsureUtc(nowUtc, nameof(nowUtc));
     }
 
@@ -137,31 +136,15 @@ public sealed class Person
         }
     }
 
-    /// <summary>
-    /// A person may have several numbers, stored in the single <c>phone</c> column as a
-    /// comma-separated list. Blanks and case-insensitive duplicates are dropped.
-    /// </summary>
-    private static string? NormalizePhone(string? phone)
+    private static List<string> NormalizePhones(IEnumerable<string>? phones)
     {
-        if (string.IsNullOrWhiteSpace(phone))
+        var result = NormalizeStringList(phones, PhoneMaxLength, nameof(phones));
+        if (result.Count > MaxPhones)
         {
-            return null;
+            throw new ArgumentException($"A person can have at most {MaxPhones} phone numbers.", nameof(phones));
         }
 
-        var numbers = phone
-            .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-            .Distinct(StringComparer.OrdinalIgnoreCase);
-        var joined = string.Join(", ", numbers);
-        return joined.Length == 0 ? null : joined;
-    }
-
-    private static void GuardPhone(string? phone)
-    {
-        if (phone is { Length: > PhoneMaxLength })
-        {
-            throw new ArgumentException(
-                $"Phone must be at most {PhoneMaxLength} characters.", nameof(phone));
-        }
+        return result;
     }
 
     private static void GuardPhysicalDescription(string? description)

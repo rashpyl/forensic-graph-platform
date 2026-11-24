@@ -17,7 +17,7 @@ public static class PersonMapping
             LastName = entity.LastName,
             Citizenships = entity.Citizenships.ToArray(),
             PassportNumbers = entity.PassportNumbers.ToArray(),
-            Phone = entity.Phone,
+            Phones = entity.Phones.ToArray(),
             PhysicalDescription = entity.PhysicalDescription,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
@@ -32,7 +32,7 @@ public static class PersonMapping
             lastName: dto.LastName,
             citizenships: dto.Citizenships,
             passportNumbers: dto.PassportNumbers,
-            phone: dto.Phone,
+            phones: dto.Phones,
             physicalDescription: dto.PhysicalDescription,
             nowUtc: nowUtc);
     }

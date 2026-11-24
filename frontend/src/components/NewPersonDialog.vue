@@ -9,7 +9,7 @@ import type { PersonWriteDto } from '@/types/api'
 
 /**
  * Modal form for creating a new person. Multi-value fields (citizenships,
- * passport numbers) use an inline chip input: type a value, press Enter or
+ * passport numbers, phones) use an inline chip input: type a value, press Enter or
  * comma to commit it, click a chip's × to remove.
  *
  * Backend validation errors surface inline via <see cref="formatApiError"/>.
@@ -23,23 +23,25 @@ const firstName = ref('')
 const lastName = ref('')
 const citizenships = ref<string[]>([])
 const passportNumbers = ref<string[]>([])
-const phone = ref('')
+const phones = ref<string[]>([])
 const physicalDescription = ref('')
 const submitting = ref(false)
 const error = ref<string | null>(null)
 
 const citizenshipDraft = ref('')
 const passportDraft = ref('')
+const phoneDraft = ref('')
 
 function reset() {
   firstName.value = ''
   lastName.value = ''
   citizenships.value = []
   passportNumbers.value = []
-  phone.value = ''
+  phones.value = []
   physicalDescription.value = ''
   citizenshipDraft.value = ''
   passportDraft.value = ''
+  phoneDraft.value = ''
   error.value = null
   submitting.value = false
 }
@@ -90,12 +92,26 @@ function handlePassportKeydown(e: KeyboardEvent) {
   }
 }
 
+function handlePhoneKeydown(e: KeyboardEvent) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault()
+    pushChip(phones.value, phoneDraft.value)
+    phoneDraft.value = ''
+  } else if (e.key === 'Backspace' && !phoneDraft.value && phones.value.length) {
+    phones.value.pop()
+  }
+}
+
 function removeCitizenship(index: number) {
   citizenships.value.splice(index, 1)
 }
 
 function removePassport(index: number) {
   passportNumbers.value.splice(index, 1)
+}
+
+function removePhone(index: number) {
+  phones.value.splice(index, 1)
 }
 
 async function submit() {
@@ -108,15 +124,17 @@ async function submit() {
   // Commit any half-typed chip drafts before submitting.
   pushChip(citizenships.value, citizenshipDraft.value)
   pushChip(passportNumbers.value, passportDraft.value)
+  pushChip(phones.value, phoneDraft.value)
   citizenshipDraft.value = ''
   passportDraft.value = ''
+  phoneDraft.value = ''
 
   const body: PersonWriteDto = {
     firstName: firstName.value.trim(),
     lastName: lastName.value.trim(),
     citizenships: [...citizenships.value],
     passportNumbers: [...passportNumbers.value],
-    phone: phone.value.trim() || null,
+    phones: [...phones.value],
     physicalDescription: physicalDescription.value.trim() || null,
   }
 
@@ -192,10 +210,25 @@ async function submit() {
           </div>
         </div>
 
-        <label class="field">
+        <div class="field">
           <span class="field-label">Phone numbers</span>
-          <input v-model="phone" type="tel" maxlength="200" placeholder="+420 …, +421 … (comma-separated)" />
-        </label>
+          <div class="chip-input" @click="() => (($refs.phoneInput as HTMLInputElement).focus())">
+            <span v-for="(n, i) in phones" :key="`${n}-${i}`" class="chip">
+              {{ n }}
+              <button type="button" class="chip-x" @click.stop="removePhone(i)">×</button>
+            </span>
+            <input
+              ref="phoneInput"
+              v-model="phoneDraft"
+              type="tel"
+              placeholder="Type and press Enter or comma"
+              class="chip-input-field"
+              maxlength="40"
+              @keydown="handlePhoneKeydown"
+              @paste="handleChipPaste($event, phones)"
+            />
+          </div>
+        </div>
 
         <label class="field">
           <span class="field-label">Physical description</span>

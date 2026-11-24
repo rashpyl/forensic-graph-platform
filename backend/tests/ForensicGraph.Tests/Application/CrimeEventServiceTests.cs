@@ -29,7 +29,7 @@ public class CrimeEventServiceTests
             lastName: "Nováková",
             citizenships: new[] { "CZ" },
             passportNumbers: new[] { "P123" },
-            phone: null,
+            phones: null,
             physicalDescription: null,
             nowUtc: time.GetUtcNow().UtcDateTime);
     }

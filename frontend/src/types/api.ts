@@ -62,7 +62,7 @@ export interface PersonDto {
   lastName: string
   citizenships: string[]
   passportNumbers: string[]
-  phone?: string | null
+  phones: string[]
   physicalDescription?: string | null
   createdAt: string
   updatedAt: string
@@ -74,7 +74,7 @@ export interface PersonWriteDto {
   lastName: string
   citizenships: string[]
   passportNumbers: string[]
-  phone?: string | null
+  phones: string[]
   physicalDescription?: string | null
   version?: number
 }

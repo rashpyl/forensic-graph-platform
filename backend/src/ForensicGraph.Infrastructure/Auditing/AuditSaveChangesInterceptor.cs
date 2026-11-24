@@ -38,7 +38,7 @@ public sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
     private static readonly HashSet<string> SensitiveProperties = new(StringComparer.Ordinal)
     {
         nameof(Person.PassportNumbers),
-        nameof(Person.Phone),
+        nameof(Person.Phones),
     };
 
     private static readonly HashSet<string> AuditedUserProperties = new(StringComparer.Ordinal)
@@ -205,7 +205,8 @@ public sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
 
         return value switch
         {
-            string s => SensitiveDataMasker.MaskEach(s),
+            // A string is also IEnumerable; mask it whole, not character by character.
+            string s => SensitiveDataMasker.Mask(s),
             IEnumerable items => items.Cast<object?>()
                 .Select(i => i is null ? null : SensitiveDataMasker.Mask(i.ToString() ?? string.Empty))
                 .ToList(),

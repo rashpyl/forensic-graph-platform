@@ -29,10 +29,6 @@ internal sealed class PersonConfiguration : IEntityTypeConfiguration<Person>
             .HasColumnType("text")
             .IsRequired();
 
-        builder.Property(p => p.Phone)
-            .HasColumnName("phone")
-            .HasColumnType("text");
-
         builder.Property(p => p.PhysicalDescription)
             .HasColumnName("physical_description")
             .HasColumnType("text");
@@ -44,6 +40,11 @@ internal sealed class PersonConfiguration : IEntityTypeConfiguration<Person>
 
         builder.Property(p => p.PassportNumbers)
             .HasColumnName("passport_numbers")
+            .HasColumnType("text[]")
+            .IsRequired();
+
+        builder.Property(p => p.Phones)
+            .HasColumnName("phones")
             .HasColumnType("text[]")
             .IsRequired();
 

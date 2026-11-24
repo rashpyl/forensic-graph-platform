@@ -11,7 +11,7 @@ public sealed record PersonWriteDto
     public string LastName { get; init; } = string.Empty;
     public IReadOnlyList<string> Citizenships { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> PassportNumbers { get; init; } = Array.Empty<string>();
-    public string? Phone { get; init; }
+    public IReadOnlyList<string> Phones { get; init; } = Array.Empty<string>();
     public string? PhysicalDescription { get; init; }
 
     /// <summary>On update, the <c>Version</c> the client last read; a mismatch is rejected with 409. Ignored on create.</summary>

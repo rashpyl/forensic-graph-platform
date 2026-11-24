@@ -96,9 +96,9 @@ public static class DatabaseSeeder
             var passports = rng.NextDouble() < 0.6
                 ? new[] { $"P{rng.Next(1_000_000, 9_999_999)}" }
                 : Array.Empty<string>();
-            var phone = rng.NextDouble() < 0.7
-                ? $"+420 {rng.Next(600, 800)} {rng.Next(100, 999)} {rng.Next(100, 999)}"
-                : null;
+            var phones = rng.NextDouble() < 0.7
+                ? new[] { $"+420 {rng.Next(600, 800)} {rng.Next(100, 999)} {rng.Next(100, 999)}" }
+                : Array.Empty<string>();
             var physical = rng.NextDouble() < 0.5
                 ? $"Approx. {160 + rng.Next(0, 40)} cm, {50 + rng.Next(0, 50)} kg."
                 : null;
@@ -109,7 +109,7 @@ public static class DatabaseSeeder
                 lastName: last,
                 citizenships: citizenships,
                 passportNumbers: passports,
-                phone: phone,
+                phones: phones,
                 physicalDescription: physical,
                 nowUtc: nowUtc));
         }

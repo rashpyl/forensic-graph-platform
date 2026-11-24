@@ -145,7 +145,7 @@ Navigate via the **Persons** link in the navbar.
 ![Persons page.](./images/user-guide/6.png)
 
 - The table lists every person, with their citizenships, passport numbers
-  (all shown as chips), phone, and — under their name — physical
+  and phones (all shown as chips), and — under their name — physical
   description in small grey text.
 - The **search box** filters client-side across name, citizenship,
   passport number, and phone as you type.
@@ -168,8 +168,8 @@ Click **👤 New Person**.
 |                      | last chip; the **×** on a chip removes just that one.    |
 | Passport numbers     | Same chip mechanics as citizenships; a pasted list       |
 |                      | like `A123, B456` is split into separate chips.          |
-| Phone                | Optional. Several numbers separated by commas.           |
-|                      | Max 200 characters in total.                             |
+| Phone numbers        | Same chip mechanics as passport numbers. Max 10 numbers, |
+|                      | 40 characters each.                                      |
 | Physical description | Optional multi-line notes. Max 2000 characters.          |
 
 Click **Create person**. On success the dialog closes and the new person

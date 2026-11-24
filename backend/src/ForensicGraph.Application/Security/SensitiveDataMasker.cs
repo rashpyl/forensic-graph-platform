@@ -22,14 +22,4 @@ public static class SensitiveDataMasker
             new string(MaskChar, value.Length - 4),
             value.AsSpan(value.Length - 2));
     }
-
-    public static string? MaskOrNull(string? value) => value is null ? null : Mask(value);
-
-    /// <summary>Masks each item of a comma-separated list separately so the items stay distinguishable.</summary>
-    public static string? MaskEach(string? commaSeparated) =>
-        commaSeparated is null
-            ? null
-            : string.Join(", ", commaSeparated
-                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                .Select(Mask));
 }

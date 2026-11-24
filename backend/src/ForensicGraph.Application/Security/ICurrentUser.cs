@@ -19,7 +19,7 @@ public interface ICurrentUser
 public static class CurrentUserExtensions
 {
     /// <summary>
-    /// Whether the user may read sensitive personal identifiers (passport numbers, phone).
+    /// Whether the user may read sensitive personal identifiers (passport numbers, phones).
     /// Viewers get a masked value instead.
     /// </summary>
     public static bool CanSeeSensitiveData(this ICurrentUser user) =>

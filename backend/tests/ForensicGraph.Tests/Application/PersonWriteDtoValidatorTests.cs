@@ -12,7 +12,7 @@ public class PersonWriteDtoValidatorTests
         LastName = "Nováková",
         Citizenships = new[] { "CZ" },
         PassportNumbers = new[] { "P123" },
-        Phone = "+420111222333",
+        Phones = new[] { "+420111222333" },
         PhysicalDescription = "Tall.",
     };
 
@@ -46,11 +46,19 @@ public class PersonWriteDtoValidatorTests
     }
 
     [Fact]
-    public void Phone_over_limit_fails()
+    public void Phone_number_over_limit_fails()
     {
         var result = new PersonWriteDtoValidator().TestValidate(
-            Valid() with { Phone = new string('9', Person.PhoneMaxLength + 1) });
-        result.ShouldHaveValidationErrorFor(x => x.Phone);
+            Valid() with { Phones = new[] { new string('9', Person.PhoneMaxLength + 1) } });
+        result.ShouldHaveValidationErrorFor("Phones[0]");
+    }
+
+    [Fact]
+    public void Too_many_phone_numbers_fail()
+    {
+        var phones = Enumerable.Range(0, Person.MaxPhones + 1).Select(i => $"+42060000000{i:D2}").ToArray();
+        var result = new PersonWriteDtoValidator().TestValidate(Valid() with { Phones = phones });
+        result.ShouldHaveValidationErrorFor(x => x.Phones);
     }
 
     [Fact]

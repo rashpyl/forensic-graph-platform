@@ -8,7 +8,7 @@ namespace ForensicGraph.Application.Persons;
 /// Use cases for the <see cref="Person"/> aggregate: list (with autocomplete),
 /// get by id, create, update, delete. Follows the same service-per-aggregate
 /// pattern as <c>CrimeEventService</c>.
-/// Passport numbers and phone are masked in every response for callers who
+/// Passport numbers and phones are masked in every response for callers who
 /// may not read sensitive data (see <see cref="CurrentUserExtensions.CanSeeSensitiveData"/>).
 /// </summary>
 public sealed class PersonService
@@ -52,7 +52,7 @@ public sealed class PersonService
             lastName: dto.LastName,
             citizenships: dto.Citizenships,
             passportNumbers: dto.PassportNumbers,
-            phone: dto.Phone,
+            phones: dto.Phones,
             physicalDescription: dto.PhysicalDescription,
             nowUtc: nowUtc);
 
@@ -103,7 +103,7 @@ public sealed class PersonService
         return dto with
         {
             PassportNumbers = dto.PassportNumbers.Select(SensitiveDataMasker.Mask).ToArray(),
-            Phone = SensitiveDataMasker.MaskEach(dto.Phone),
+            Phones = dto.Phones.Select(SensitiveDataMasker.Mask).ToArray(),
         };
     }
 }

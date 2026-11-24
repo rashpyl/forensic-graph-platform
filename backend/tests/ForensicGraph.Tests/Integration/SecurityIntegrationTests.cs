@@ -100,7 +100,8 @@ public sealed class SecurityIntegrationTests : IClassFixture<SecurityIntegration
         var asAnalyst = await _s.Analyst.Http.GetFromJsonAsync<JsonElement>($"/api/persons/{created.Id}");
 
         Assert.Equal("AB•••••12", asViewer.GetProperty("passportNumbers")[0].GetString());
-        Assert.DoesNotContain("1112223", asViewer.GetProperty("phone").GetString());
+        Assert.Equal("+4•••••••••33", asViewer.GetProperty("phones")[0].GetString());
+        Assert.Equal("+420111222333", asAnalyst.GetProperty("phones")[0].GetString());
         Assert.Equal("AB1234512", asAnalyst.GetProperty("passportNumbers")[0].GetString());
     }
 
@@ -123,7 +124,7 @@ public sealed class SecurityIntegrationTests : IClassFixture<SecurityIntegration
     public async Task Change_is_audited_with_user_and_masked_values()
     {
         Skip.IfNot(SecurityApiFactory.IsConfigured, "FG_TEST_POSTGRES not set");
-        var person = await CreatePersonAsync("EF7654321", null);
+        var person = await CreatePersonAsync("EF7654321", "+420111222333");
 
         var page = await _s.Admin.Http.GetFromJsonAsync<JsonElement>($"/api/audit?entityId={person.Id}");
         var entry = page.GetProperty("items").EnumerateArray().Single();
@@ -133,6 +134,8 @@ public sealed class SecurityIntegrationTests : IClassFixture<SecurityIntegration
         Assert.Equal("Created", entry.GetProperty("action").GetString());
         Assert.Contains("EF•••••21", changes);
         Assert.DoesNotContain("EF7654321", changes);
+        Assert.Contains("+4•••••••••33", changes);
+        Assert.DoesNotContain("+420111222333", changes);
     }
 
     [SkippableFact]
@@ -237,7 +240,7 @@ public sealed class SecurityIntegrationTests : IClassFixture<SecurityIntegration
             lastName = "Person",
             citizenships = new[] { "CZ" },
             passportNumbers = passport is null ? Array.Empty<string>() : new[] { passport },
-            phone,
+            phones = phone is null ? Array.Empty<string>() : new[] { phone },
         });
         response.EnsureSuccessStatusCode();
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();

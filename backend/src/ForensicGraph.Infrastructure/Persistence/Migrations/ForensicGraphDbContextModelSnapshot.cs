@@ -171,9 +171,10 @@ namespace ForensicGraph.Infrastructure.Persistence.Migrations
                         .HasColumnType("text[]")
                         .HasColumnName("passport_numbers");
 
-                    b.Property<string>("Phone")
-                        .HasColumnType("text")
-                        .HasColumnName("phone");
+                    b.PrimitiveCollection<List<string>>("Phones")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("phones");
 
                     b.Property<string>("PhysicalDescription")
                         .HasColumnType("text")
