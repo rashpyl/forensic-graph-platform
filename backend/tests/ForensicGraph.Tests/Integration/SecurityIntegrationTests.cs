@@ -208,6 +208,27 @@ public sealed class SecurityIntegrationTests : IClassFixture<SecurityIntegration
         Assert.Equal(HttpStatusCode.Conflict, demote.StatusCode);
     }
 
+    [SkippableFact]
+    public async Task User_changes_own_password_and_stays_signed_in()
+    {
+        Skip.IfNot(SecurityApiFactory.IsConfigured, "FG_TEST_POSTGRES not set");
+        const string newPassword = "viewer-chosen-password";
+
+        var wrongCurrent = await _s.Viewer.PostAsync("/api/auth/change-password",
+            new { currentPassword = "not-the-password", newPassword });
+        var changed = await _s.Viewer.PostAsync("/api/auth/change-password",
+            new { currentPassword = SecurityApiFactory.DemoPassword, newPassword });
+        var me = await _s.Viewer.GetAsync("/api/auth/me");
+        // Same antiforgery token as before: the refreshed cookie keeps the identity.
+        var changedBack = await _s.Viewer.PostAsync("/api/auth/change-password",
+            new { currentPassword = newPassword, newPassword = SecurityApiFactory.DemoPassword });
+
+        Assert.Equal(HttpStatusCode.BadRequest, wrongCurrent.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, changed.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, me.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, changedBack.StatusCode);
+    }
+
     private async Task<(Guid Id, uint Version)> CreatePersonAsync(string? passport, string? phone)
     {
         var response = await _s.Analyst.PostAsync("/api/persons", new

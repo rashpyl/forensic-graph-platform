@@ -5,7 +5,7 @@ import { ref } from 'vue'
  * UI-only state that does not belong on the domain stores. Currently owns:
  *  - Location-picking mode for the map's "New Event" flow.
  *  - The pending coordinates handed from the map into <c>NewEventDialog</c>.
- *  - Open/closed flags for the two modal dialogs and the About modal.
+ *  - Open/closed flags for the modal dialogs and the About modal.
  */
 export const useUiStore = defineStore('ui', () => {
   const isPickingLocation = ref(false)
@@ -14,6 +14,7 @@ export const useUiStore = defineStore('ui', () => {
 
   const isNewPersonDialogOpen = ref(false)
   const isAboutModalOpen = ref(false)
+  const isChangePasswordDialogOpen = ref(false)
 
   function startPickingLocation(): void {
     isPickingLocation.value = true
@@ -51,12 +52,21 @@ export const useUiStore = defineStore('ui', () => {
     isAboutModalOpen.value = false
   }
 
+  function openChangePasswordDialog(): void {
+    isChangePasswordDialogOpen.value = true
+  }
+
+  function closeChangePasswordDialog(): void {
+    isChangePasswordDialogOpen.value = false
+  }
+
   return {
     isPickingLocation,
     isNewEventDialogOpen,
     pendingLocation,
     isNewPersonDialogOpen,
     isAboutModalOpen,
+    isChangePasswordDialogOpen,
     startPickingLocation,
     cancelPicking,
     locationPicked,
@@ -65,5 +75,7 @@ export const useUiStore = defineStore('ui', () => {
     closeNewPersonDialog,
     openAboutModal,
     closeAboutModal,
+    openChangePasswordDialog,
+    closeChangePasswordDialog,
   }
 })

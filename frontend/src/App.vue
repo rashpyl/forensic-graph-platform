@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 import { onUnauthorized } from '@/services/apiClient'
 import NewPersonDialog from '@/components/NewPersonDialog.vue'
 import AboutModal from '@/components/AboutModal.vue'
+import ChangePasswordDialog from '@/components/ChangePasswordDialog.vue'
 
 const uiStore = useUiStore()
 const authStore = useAuthStore()
@@ -65,6 +66,7 @@ function startNewEvent() {
         <div v-if="user" class="user-chip" :title="user.email">
           <span class="user-name">{{ user.displayName }}</span>
           <span class="role-pill" :data-role="user.role">{{ user.role }}</span>
+          <button class="nav-btn subtle" @click="uiStore.openChangePasswordDialog()">Change password</button>
           <button class="nav-btn subtle" @click="signOut">Sign out</button>
         </div>
       </nav>
@@ -75,6 +77,7 @@ function startNewEvent() {
 
     <NewPersonDialog />
     <AboutModal />
+    <ChangePasswordDialog />
   </div>
 </template>
 
