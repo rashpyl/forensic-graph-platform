@@ -3,7 +3,8 @@ namespace ForensicGraph.Application.Security;
 /// <summary>
 /// The authenticated user on whose behalf the current request runs.
 /// Implemented in the API layer from the HTTP context; application services
-/// use it to decide what a caller may see (sensitive-field masking).
+/// use it to decide what a caller may see (sensitive-field masking), and the
+/// audit log uses it to record who made each change.
 /// </summary>
 public interface ICurrentUser
 {

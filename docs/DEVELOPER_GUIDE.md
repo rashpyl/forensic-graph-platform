@@ -145,8 +145,13 @@ hostnames and get confusing preflight failures. Credentials are allowed
 - **Sign-in:** ASP.NET Core Identity; passwords stored as salted PBKDF2
   hashes, minimum 12 characters. Lockout for 15 minutes after 5 failed
   attempts, plus at most 5 login attempts per minute per IP. An unknown
-  e-mail, a wrong password and a locked account return the same error, so
-  the login form cannot be used to discover accounts.
+  e-mail, a wrong password and a locked account return the same error.
+  Known gap: an unknown e-mail is answered faster because no password hash
+  is computed, so the response time can still reveal whether an account
+  exists.
+- **Passwords:** an Admin sets the initial password and can reset it; users
+  then change their own via *Change password* in the user menu
+  (`POST /api/auth/change-password`, requires the current password).
 - **Session:** `HttpOnly`, `SameSite=Strict` cookie (`Secure` outside
   Development), so page scripts cannot read it. Deactivation or a role
   change reaches open sessions within a minute.

@@ -63,7 +63,9 @@ public sealed class AuthController : ControllerBase
     /// <summary>
     /// Signs in with e-mail and password and sets the session cookie.
     /// The error message is the same for an unknown e-mail, a wrong password and
-    /// a locked account, so the endpoint cannot be used to discover accounts.
+    /// a locked account. The response time still differs: an unknown e-mail is
+    /// rejected without hashing a password, so timing can reveal whether an
+    /// account exists.
     /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
